@@ -89,6 +89,81 @@ function getAllConversations(forceRefresh = false) {
   return all;
 }
 
+function parseConversationDate(value) {
+  if (!value) return null;
+  const date = new Date(typeof value === 'number' ? value * 1000 : value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function buildConversationStats(conversations, source = 'all') {
+  const filtered = source && source !== 'all'
+    ? conversations.filter(conversation => conversation.source === source)
+    : conversations;
+
+  const bySource = {};
+  const hourly = Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 }));
+  const heatmap = Array.from({ length: 7 }, () => Array(24).fill(0));
+  const weekdayTotals = Array(7).fill(0);
+  const activeDays = new Set();
+  let withTimestamp = 0;
+
+  for (const conversation of filtered) {
+    bySource[conversation.source] = (bySource[conversation.source] || 0) + 1;
+
+    const date = parseConversationDate(conversation.lastTimestamp || conversation.timestamp);
+    if (!date) continue;
+
+    withTimestamp += 1;
+    const hour = date.getHours();
+    const weekday = date.getDay();
+
+    hourly[hour].count += 1;
+    heatmap[weekday][hour] += 1;
+    weekdayTotals[weekday] += 1;
+
+    const dayKey = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, '0'),
+      String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+    activeDays.add(dayKey);
+  }
+
+  const maxHourlyCount = Math.max(0, ...hourly.map(item => item.count));
+  const maxHeatmapCount = Math.max(0, ...heatmap.flat());
+
+  let busiestHour = null;
+  let busiestWeekday = null;
+
+  if (maxHourlyCount > 0) {
+    busiestHour = hourly.reduce((best, item) => item.count > best.count ? item : best, hourly[0]).hour;
+  }
+
+  if (Math.max(0, ...weekdayTotals) > 0) {
+    busiestWeekday = weekdayTotals.reduce(
+      (bestIndex, count, index) => count > weekdayTotals[bestIndex] ? index : bestIndex,
+      0
+    );
+  }
+
+  return {
+    source,
+    total: filtered.length,
+    bySource,
+    activity: {
+      basedOn: 'lastTimestamp',
+      withTimestamp,
+      activeDays: activeDays.size,
+      busiestHour,
+      busiestWeekday,
+      maxHourlyCount,
+      maxHeatmapCount,
+      hourly,
+      heatmap,
+    },
+  };
+}
+
 // ── API Routes ─────────────────────────────────────────────────────────────
 
 // List all conversations
@@ -149,12 +224,9 @@ app.get('/api/conversations/:id', (req, res) => {
 // Stats
 app.get('/api/stats', (req, res) => {
   try {
-    const all = getAllConversations();
-    const bySource = {};
-    for (const c of all) {
-      bySource[c.source] = (bySource[c.source] || 0) + 1;
-    }
-    res.json({ total: all.length, bySource });
+    const all = getAllConversations(req.query.refresh === '1');
+    const source = typeof req.query.source === 'string' ? req.query.source : 'all';
+    res.json(buildConversationStats(all, source));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

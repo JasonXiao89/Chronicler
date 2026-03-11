@@ -29,6 +29,7 @@
     --scrollbar: rgba(132, 111, 95, 0.26);
     --shadow-soft: 0 16px 28px rgba(97, 77, 60, 0.08);
     --shadow-card: 0 10px 22px rgba(97, 77, 60, 0.09);
+    --heat-rgb: 160, 123, 95;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -75,6 +76,7 @@
     --scrollbar: rgba(201, 184, 168, 0.24);
     --shadow-soft: 0 16px 30px rgba(0, 0, 0, 0.28);
     --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.24);
+    --heat-rgb: 199, 155, 118;
     color-scheme: dark;
     background-image:
       radial-gradient(circle at top left, rgba(199, 155, 118, 0.14), transparent 30%),
@@ -166,6 +168,34 @@
     gap: 12px;
     flex-wrap: wrap;
   }
+  .page-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 251, 246, 0.74);
+    border: 1px solid rgba(108, 89, 72, 0.1);
+  }
+  .page-tab {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    transition: transform 0.18s ease, color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  }
+  .page-tab.active {
+    background: var(--accent);
+    color: #fffaf4;
+  }
+  .page-tab:hover:not(.active) {
+    background: rgba(160, 123, 95, 0.08);
+    color: var(--text);
+    border-color: rgba(108, 89, 72, 0.14);
+    transform: translateY(-1px);
+  }
   .stats {
     font-size: 12px;
     color: var(--text-soft);
@@ -176,6 +206,195 @@
     border: 1px solid rgba(108, 89, 72, 0.12);
     backdrop-filter: blur(10px);
     font-variant-numeric: tabular-nums;
+  }
+
+  .dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    gap: 18px;
+    padding: 0;
+  }
+  .page-shell {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .page {
+    display: none;
+    min-height: 0;
+    height: 100%;
+  }
+  .page.active {
+    display: flex;
+  }
+  .dashboard-page {
+    flex-direction: column;
+    overflow: auto;
+    padding: 22px 24px 28px;
+    background: linear-gradient(180deg, rgba(251, 247, 242, 0.52), rgba(244, 237, 229, 0.86));
+  }
+  .conversation-page {
+    overflow: hidden;
+  }
+  .analytics-overview {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .overview-card {
+    border-radius: 18px;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    background: rgba(255, 251, 246, 0.74);
+    box-shadow: var(--shadow-soft);
+  }
+  .overview-label {
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .overview-value {
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 650;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .overview-subtext {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-soft);
+  }
+  .analytics-card {
+    min-width: 0;
+    border-radius: 24px;
+    padding: 18px 18px 16px;
+    border: 1px solid var(--border);
+    background: rgba(255, 251, 246, 0.74);
+    box-shadow: var(--shadow-soft);
+  }
+  .analytics-card-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .analytics-kicker {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .analytics-card h2 {
+    font-size: 18px;
+    line-height: 1.1;
+    font-weight: 650;
+    color: var(--text);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .analytics-meta {
+    font-size: 12px;
+    color: var(--text-soft);
+    text-align: right;
+    line-height: 1.5;
+    max-width: 20ch;
+  }
+  .analytics-empty {
+    min-height: 146px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    border-radius: 18px;
+    background: rgba(160, 123, 95, 0.06);
+    border: 1px dashed rgba(108, 89, 72, 0.12);
+  }
+  .hourly-chart {
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    gap: 6px;
+    align-items: end;
+    min-height: 146px;
+  }
+  .hourly-chart > .analytics-empty {
+    grid-column: 1 / -1;
+  }
+  .hourly-bar-wrap {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .hourly-value {
+    min-height: 14px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .hourly-bar {
+    width: 100%;
+    min-height: 8px;
+    height: var(--bar-height, 16px);
+    border-radius: 999px 999px 10px 10px;
+    background: rgba(var(--heat-rgb), var(--bar-alpha, 0.16));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  }
+  .hourly-label {
+    min-height: 12px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .heatmap-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .heatmap-shell {
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .heatmap {
+    min-width: 610px;
+    display: grid;
+    grid-template-columns: 42px repeat(24, minmax(14px, 1fr));
+    gap: 6px;
+    align-items: center;
+  }
+  .heatmap-label,
+  .heatmap-hour-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .heatmap-label {
+    font-size: 11px;
+  }
+  .heatmap-hour-label {
+    text-align: center;
+  }
+  .heatmap-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    background: rgba(var(--heat-rgb), var(--heat-alpha, 0.05));
+    border: 1px solid rgba(108, 89, 72, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  .heatmap-legend {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--text-soft);
   }
 
   /* Source tabs */
@@ -781,6 +1000,37 @@
     background: rgba(255, 248, 240, 0.06);
     border-color: rgba(223, 206, 187, 0.1);
   }
+  body[data-theme="dark"] .page-tabs {
+    background: rgba(255, 248, 240, 0.05);
+    border-color: rgba(223, 206, 187, 0.08);
+  }
+  body[data-theme="dark"] .page-tab:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(223, 206, 187, 0.12);
+  }
+  body[data-theme="dark"] .dashboard {
+    background: transparent;
+  }
+  body[data-theme="dark"] .dashboard-page {
+    background: linear-gradient(180deg, rgba(25, 21, 18, 0.56), rgba(17, 15, 13, 0.9));
+  }
+  body[data-theme="dark"] .analytics-card {
+    background: rgba(255, 248, 240, 0.04);
+    border-color: rgba(223, 206, 187, 0.1);
+  }
+  body[data-theme="dark"] .overview-card {
+    background: rgba(255, 248, 240, 0.04);
+    border-color: rgba(223, 206, 187, 0.1);
+  }
+  body[data-theme="dark"] .analytics-empty {
+    background: rgba(199, 155, 118, 0.08);
+    border-color: rgba(223, 206, 187, 0.12);
+  }
+  body[data-theme="dark"] .hourly-bar,
+  body[data-theme="dark"] .heatmap-cell {
+    border-color: rgba(223, 206, 187, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
   body[data-theme="dark"] .source-tabs {
     background: rgba(255, 248, 240, 0.05);
     border-color: rgba(223, 206, 187, 0.08);
@@ -914,6 +1164,8 @@
     .sidebar { width: 306px; }
     .summary-panel { width: 320px; }
     .stats { margin-left: 0; }
+    .analytics-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dashboard { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 920px) {
@@ -921,6 +1173,15 @@
     .header {
       flex-wrap: wrap;
       align-items: flex-start;
+    }
+    .dashboard {
+      gap: 14px;
+    }
+    .dashboard-page {
+      padding: 14px 16px 20px;
+    }
+    .analytics-overview {
+      grid-template-columns: 1fr;
     }
     .stats {
       width: 100%;
@@ -968,6 +1229,10 @@
     <h1>Chronicler</h1>
   </div>
   <div class="header-actions">
+    <div class="page-tabs">
+      <button class="page-tab active" data-view="conversations" onclick="setView('conversations', this)">对话</button>
+      <button class="page-tab" data-view="dashboard" onclick="setView('dashboard', this)">仪表盘</button>
+    </div>
     <div class="source-tabs">
       <button class="source-tab active" data-source="all" onclick="setSource('all', this)">全部</button>
       <button class="source-tab" data-source="claude" onclick="setSource('claude', this)">Claude Code</button>
@@ -980,45 +1245,88 @@
   <div class="stats" id="stats">加载中...</div>
 </div>
 
-<div class="main">
-  <div class="sidebar">
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="搜索对话..." oninput="onSearch(this.value)">
-    </div>
-    <div class="conv-list" id="convList">
-      <div class="loading">加载中...</div>
-    </div>
-    <div class="load-more" id="loadMore" style="display:none" onclick="loadMore()">加载更多</div>
-  </div>
-
-  <div class="content">
-    <div class="conv-view" id="convView">
-      <div class="empty-state">
-        <div class="empty-state-icon">💬</div>
-        <div>选择一个对话开始浏览</div>
+<div class="page-shell">
+  <section class="page dashboard-page" id="dashboardPage">
+    <div class="analytics-overview" id="analyticsOverview">
+      <div class="overview-card">
+        <div class="overview-label">Conversations</div>
+        <div class="overview-value">-</div>
+        <div class="overview-subtext">正在加载统计</div>
       </div>
     </div>
-    <div class="summary-panel">
-      <div class="summary-header">AI 分析摘要</div>
-      <div class="summary-content" id="summaryContent">
-        <div class="summary-placeholder">
-          <span>✨</span>
-          <div>打开对话后点击</div>
-          <div><strong>「AI 分析」</strong>按钮</div>
-          <div class="summary-placeholder-note">提取问题、意图、思路和解决方案</div>
+    <div class="dashboard">
+      <section class="analytics-card">
+        <div class="analytics-card-header">
+          <div>
+            <div class="analytics-kicker">Conversation Rhythm</div>
+            <h2>活跃时间分布</h2>
+          </div>
+          <div class="analytics-meta" id="hourlySummary">按最近活跃时间统计</div>
+        </div>
+        <div class="hourly-chart" id="hourlyChart">
+          <div class="analytics-empty">加载中...</div>
+        </div>
+      </section>
+
+      <section class="analytics-card">
+        <div class="analytics-card-header">
+          <div>
+            <div class="analytics-kicker">Weekly Activity Map</div>
+            <h2>活跃热力图</h2>
+          </div>
+          <div class="analytics-meta" id="heatmapSummary">按最近活跃时间统计</div>
+        </div>
+        <div class="heatmap-wrap" id="heatmapGrid">
+          <div class="analytics-empty">加载中...</div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <section class="page conversation-page active" id="conversationPage">
+    <div class="main">
+      <div class="sidebar">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="搜索对话..." oninput="onSearch(this.value)">
+        </div>
+        <div class="conv-list" id="convList">
+          <div class="loading">加载中...</div>
+        </div>
+        <div class="load-more" id="loadMore" style="display:none" onclick="loadMore()">加载更多</div>
+      </div>
+
+      <div class="content">
+        <div class="conv-view" id="convView">
+          <div class="empty-state">
+            <div class="empty-state-icon">💬</div>
+            <div>选择一个对话开始浏览</div>
+          </div>
+        </div>
+        <div class="summary-panel">
+          <div class="summary-header">AI 分析摘要</div>
+          <div class="summary-content" id="summaryContent">
+            <div class="summary-placeholder">
+              <span>✨</span>
+              <div>打开对话后点击</div>
+              <div><strong>「AI 分析」</strong>按钮</div>
+              <div class="summary-placeholder-note">提取问题、意图、思路和解决方案</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </div>
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
 let state = {
+  view: 'conversations',
   source: 'all',
   search: '',
   page: 1,
   total: 0,
+  stats: null,
   conversations: [],
   activeId: null,
   activeMessages: [],
@@ -1028,6 +1336,8 @@ let state = {
 
 const LIMIT = 50;
 const THEME_KEY = 'chronicler-theme';
+const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const HEATMAP_WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 function getPreferredTheme() {
   const saved = localStorage.getItem(THEME_KEY);
@@ -1059,17 +1369,38 @@ function toggleTheme() {
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
   applyTheme(getPreferredTheme());
+  renderView();
   await loadStats();
   await loadConversations(true);
 }
 
-async function loadStats() {
+async function loadStats(options = {}) {
+  const requestedSource = state.source;
   try {
-    const r = await fetch('/api/stats');
-    const data = await r.json();
-    document.getElementById('stats').textContent =
-      `共 ${data.total} 条对话 · Claude ${data.bySource.claude||0} · Codex ${data.bySource.codex||0} · Cursor ${data.bySource.cursor||0}`;
-  } catch {}
+    const params = new URLSearchParams({ source: requestedSource });
+    if (options.refresh) params.set('refresh', '1');
+    const r = await fetch(`/api/stats?${params}`);
+    let data = await r.json();
+    if (!hasActivityData(data) || data.source !== requestedSource) {
+      data = await buildStatsFallback(requestedSource, options.refresh);
+    }
+    if (requestedSource !== state.source) return;
+    state.stats = data;
+    document.getElementById('stats').textContent = renderStatsSummary(data);
+    renderActivityDashboard(data.activity);
+  } catch {
+    try {
+      const data = await buildStatsFallback(requestedSource, options.refresh);
+      if (requestedSource !== state.source) return;
+      state.stats = data;
+      document.getElementById('stats').textContent = renderStatsSummary(data);
+      renderActivityDashboard(data.activity);
+    } catch {
+      if (requestedSource !== state.source) return;
+      document.getElementById('stats').textContent = '统计加载失败';
+      renderActivityDashboard(null);
+    }
+  }
 }
 
 async function loadConversations(reset = false) {
@@ -1475,6 +1806,7 @@ function setSource(source, el) {
   state.source = source;
   document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  loadStats();
   loadConversations(true);
 }
 
@@ -1491,7 +1823,7 @@ async function refreshList() {
   state.conversations = data.items;
   state.page = 1;
   renderList();
-  await loadStats();
+  await loadStats({ refresh: true });
   document.getElementById('loadMore').style.display = state.conversations.length < state.total ? '' : 'none';
 }
 
@@ -1513,6 +1845,259 @@ function renderMarkdown(text) {
     .replace(/^<\/p>|^<p>$/gm, '');
 }
 
+function renderStatsSummary(data) {
+  if (!data) return '统计加载失败';
+
+  if (data.source && data.source !== 'all') {
+    const sourceLabel = ({
+      claude: 'Claude Code',
+      codex: 'Codex',
+      cursor: 'Cursor',
+    })[data.source] || data.source;
+    const activeDays = data.activity?.activeDays || 0;
+    return `${sourceLabel} ${data.total} 条对话 · 活跃 ${activeDays} 天`;
+  }
+
+  return `共 ${data.total} 条对话 · Claude ${data.bySource.claude||0} · Codex ${data.bySource.codex||0} · Cursor ${data.bySource.cursor||0}`;
+}
+
+function renderActivityDashboard(activity) {
+  const hourlySummary = document.getElementById('hourlySummary');
+  const heatmapSummary = document.getElementById('heatmapSummary');
+  const hourlyChart = document.getElementById('hourlyChart');
+  const heatmapGrid = document.getElementById('heatmapGrid');
+  const overview = document.getElementById('analyticsOverview');
+
+  if (!activity || !Array.isArray(activity.hourly) || !Array.isArray(activity.heatmap)) {
+    hourlySummary.textContent = '按最近活跃时间统计';
+    heatmapSummary.textContent = '按最近活跃时间统计';
+    hourlyChart.innerHTML = '<div class="analytics-empty">暂无时间数据</div>';
+    heatmapGrid.innerHTML = '<div class="analytics-empty">暂无时间数据</div>';
+    overview.innerHTML = `
+      <div class="overview-card">
+        <div class="overview-label">Conversations</div>
+        <div class="overview-value">-</div>
+        <div class="overview-subtext">暂无统计数据</div>
+      </div>`;
+    return;
+  }
+
+  const busiestHourText = activity.busiestHour == null
+    ? '暂无高峰时段'
+    : `高峰 ${formatHourBucket(activity.busiestHour)}`;
+  const activeDaysText = activity.activeDays
+    ? `覆盖 ${activity.activeDays} 天`
+    : '暂无时间数据';
+
+  hourlySummary.textContent = `${busiestHourText} · ${activeDaysText}`;
+  heatmapSummary.textContent = activity.busiestWeekday == null
+    ? '暂无热区'
+    : `${WEEKDAY_LABELS[activity.busiestWeekday]}最活跃 · ${activity.withTimestamp || 0} 条记录`;
+
+  const topHourCount = activity.busiestHour == null
+    ? '暂无峰值'
+    : `${formatHourBucket(activity.busiestHour)} 最活跃`;
+  const topWeekdayText = activity.busiestWeekday == null
+    ? '暂无活跃日'
+    : `${WEEKDAY_LABELS[activity.busiestWeekday]}最活跃`;
+  const maxHourlyCount = activity.maxHourlyCount || 0;
+  const sourceLabel = ({
+    all: '全部来源',
+    claude: 'Claude Code',
+    codex: 'Codex',
+    cursor: 'Cursor',
+  })[state.source] || state.source;
+
+  overview.innerHTML = `
+    <div class="overview-card">
+      <div class="overview-label">Scope</div>
+      <div class="overview-value">${escape(sourceLabel)}</div>
+      <div class="overview-subtext">当前来源筛选</div>
+    </div>
+    <div class="overview-card">
+      <div class="overview-label">Timestamped</div>
+      <div class="overview-value">${formatCompactNumber(activity.withTimestamp || 0)}</div>
+      <div class="overview-subtext">带可解析时间的对话</div>
+    </div>
+    <div class="overview-card">
+      <div class="overview-label">Peak Hour</div>
+      <div class="overview-value">${activity.busiestHour == null ? '-' : formatHourBucket(activity.busiestHour)}</div>
+      <div class="overview-subtext">${escape(topHourCount)} · 峰值 ${formatCompactNumber(maxHourlyCount)} 条</div>
+    </div>
+    <div class="overview-card">
+      <div class="overview-label">Active Days</div>
+      <div class="overview-value">${formatCompactNumber(activity.activeDays || 0)}</div>
+      <div class="overview-subtext">${escape(topWeekdayText)}</div>
+    </div>`;
+
+  hourlyChart.innerHTML = renderHourlyChart(activity.hourly, activity.maxHourlyCount || 0);
+  heatmapGrid.innerHTML = renderHeatmap(activity.heatmap, activity.maxHeatmapCount || 0, activity.withTimestamp || 0);
+}
+
+function setView(view, el) {
+  state.view = view === 'dashboard' ? 'dashboard' : 'conversations';
+  document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderView();
+}
+
+function renderView() {
+  const dashboardPage = document.getElementById('dashboardPage');
+  const conversationPage = document.getElementById('conversationPage');
+  if (dashboardPage) dashboardPage.classList.toggle('active', state.view === 'dashboard');
+  if (conversationPage) conversationPage.classList.toggle('active', state.view === 'conversations');
+}
+
+function hasActivityData(data) {
+  return Boolean(
+    data &&
+    Array.isArray(data.activity?.hourly) &&
+    Array.isArray(data.activity?.heatmap)
+  );
+}
+
+async function buildStatsFallback(source, refresh = false) {
+  const conversations = await fetchConversationsForStats(source, refresh);
+  return computeActivityFromConversations(conversations, source);
+}
+
+async function fetchConversationsForStats(source, refresh = false) {
+  const limit = 500;
+  const allItems = [];
+  let page = 1;
+  let total = Infinity;
+
+  while (allItems.length < total) {
+    const params = new URLSearchParams({
+      source,
+      page,
+      limit,
+    });
+    if (refresh && page === 1) params.set('refresh', '1');
+
+    const response = await fetch(`/api/conversations?${params}`);
+    const data = await response.json();
+    total = data.total || 0;
+    if (!Array.isArray(data.items) || data.items.length === 0) break;
+    allItems.push(...data.items);
+    page += 1;
+  }
+
+  return allItems;
+}
+
+function computeActivityFromConversations(conversations, source = 'all') {
+  const filtered = source && source !== 'all'
+    ? conversations.filter(conversation => conversation.source === source)
+    : conversations;
+  const bySource = {};
+  const hourly = Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 }));
+  const heatmap = Array.from({ length: 7 }, () => Array(24).fill(0));
+  const weekdayTotals = Array(7).fill(0);
+  const activeDays = new Set();
+  let withTimestamp = 0;
+
+  for (const conversation of filtered) {
+    bySource[conversation.source] = (bySource[conversation.source] || 0) + 1;
+    const date = parseConversationDate(conversation.lastTimestamp || conversation.timestamp);
+    if (!date) continue;
+
+    withTimestamp += 1;
+    const hour = date.getHours();
+    const weekday = date.getDay();
+    hourly[hour].count += 1;
+    heatmap[weekday][hour] += 1;
+    weekdayTotals[weekday] += 1;
+
+    const dayKey = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, '0'),
+      String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+    activeDays.add(dayKey);
+  }
+
+  const maxHourlyCount = Math.max(0, ...hourly.map(item => item.count));
+  const maxHeatmapCount = Math.max(0, ...heatmap.flat());
+  const busiestHour = maxHourlyCount > 0
+    ? hourly.reduce((best, item) => item.count > best.count ? item : best, hourly[0]).hour
+    : null;
+  const busiestWeekday = Math.max(0, ...weekdayTotals) > 0
+    ? weekdayTotals.reduce((bestIndex, count, index) => count > weekdayTotals[bestIndex] ? index : bestIndex, 0)
+    : null;
+
+  return {
+    source,
+    total: filtered.length,
+    bySource,
+    activity: {
+      basedOn: 'lastTimestamp',
+      withTimestamp,
+      activeDays: activeDays.size,
+      busiestHour,
+      busiestWeekday,
+      maxHourlyCount,
+      maxHeatmapCount,
+      hourly,
+      heatmap,
+    },
+  };
+}
+
+function parseConversationDate(value) {
+  if (!value) return null;
+  const date = new Date(typeof value === 'number' ? value * 1000 : value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function renderHourlyChart(hourly, maxCount) {
+  if (!hourly.some(item => item.count > 0)) {
+    return '<div class="analytics-empty">还没有可用的活跃时间数据</div>';
+  }
+
+  const tickHours = new Set([0, 6, 12, 18, 23]);
+  return hourly.map(({ hour, count }) => {
+    const ratio = maxCount ? count / maxCount : 0;
+    const height = count ? Math.round(18 + ratio * 96) : 8;
+    const alpha = count ? (0.18 + ratio * 0.68).toFixed(3) : '0.08';
+    const value = count || '&nbsp;';
+    const label = tickHours.has(hour) ? String(hour).padStart(2, '0') : '·';
+
+    return `
+      <div class="hourly-bar-wrap" title="${formatHourBucket(hour)} · ${count} 条对话">
+        <div class="hourly-value">${value}</div>
+        <div class="hourly-bar" style="--bar-height:${height}px; --bar-alpha:${alpha}"></div>
+        <div class="hourly-label">${label}</div>
+      </div>`;
+  }).join('');
+}
+
+function renderHeatmap(heatmap, maxCount, totalCount) {
+  const hasActivity = heatmap.some(row => row.some(count => count > 0));
+  if (!hasActivity) {
+    return '<div class="analytics-empty">还没有可用的热力图数据</div>';
+  }
+
+  let grid = '<div class="heatmap-shell"><div class="heatmap">';
+  grid += '<div class="heatmap-label"></div>';
+  grid += Array.from({ length: 24 }, (_, hour) =>
+    `<div class="heatmap-hour-label">${hour % 6 === 0 ? String(hour).padStart(2, '0') : ''}</div>`
+  ).join('');
+
+  for (const weekday of HEATMAP_WEEK_ORDER) {
+    grid += `<div class="heatmap-label">${WEEKDAY_LABELS[weekday]}</div>`;
+    grid += heatmap[weekday].map((count, hour) => {
+      const ratio = maxCount ? count / maxCount : 0;
+      const alpha = count ? (0.1 + ratio * 0.82).toFixed(3) : '0.04';
+      return `<div class="heatmap-cell" style="--heat-alpha:${alpha}" title="${WEEKDAY_LABELS[weekday]} ${formatHourBucket(hour)} · ${count} 条对话"></div>`;
+    }).join('');
+  }
+
+  grid += '</div></div>';
+  grid += `<div class="heatmap-legend"><span>周一到周日，按小时展开</span><span>${totalCount} 条带时间戳的对话</span></div>`;
+  return grid;
+}
+
 function escape(str) {
   return String(str || '')
     .replace(/&/g, '&amp;')
@@ -1530,6 +2115,10 @@ function truncate(str, n) {
 
 function formatTokenNumber(value) {
   return Number(value || 0).toLocaleString('en-US');
+}
+
+function formatCompactNumber(value) {
+  return Number(value || 0).toLocaleString('zh-CN');
 }
 
 function renderTokenUsage(tokenUsage, options = {}) {
@@ -1579,6 +2168,10 @@ function formatTime(ts) {
   const d = new Date(typeof ts === 'number' ? ts * 1000 : ts);
   if (isNaN(d)) return '';
   return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+function formatHourBucket(hour) {
+  return `${String(hour).padStart(2, '0')}:00`;
 }
 
 init();
