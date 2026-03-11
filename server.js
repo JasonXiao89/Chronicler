@@ -30,50 +30,40 @@ app.use((err, req, res, next) => {
   return next(err);
 });
 
-// Prefer Anthropic API key, fallback to OpenAI key
+// ── AI Client setup ──────────────────────────────────────────────────────────
+// Prefer Anthropic API key, fallback to OpenAI key (read from Claude Desktop config)
 let aiProvider = null;
 
 function loadAiProvider() {
+  // 1. Anthropic API key from env or .env
   if (process.env.ANTHROPIC_API_KEY) {
     const Anthropic = require('@anthropic-ai/sdk');
-    return {
-      type: 'anthropic',
-      client: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }),
-    };
+    return { type: 'anthropic', client: new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) };
   }
-
+  // 2. OpenAI key from env, .env, or Claude Desktop config
   let openaiKey = process.env.OPENAI_API_KEY;
   if (!openaiKey) {
-    const desktopConfig = path.join(
-      os.homedir(),
-      'AppData',
-      'Roaming',
-      'Claude',
-      'claude_desktop_config.json'
-    );
+    const desktopConfig = path.join(os.homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json');
     if (fs.existsSync(desktopConfig)) {
       try {
         const cfg = JSON.parse(fs.readFileSync(desktopConfig, 'utf8'));
+        // Search for OPENAI_API_KEY in all mcpServers env blocks
         const text = JSON.stringify(cfg);
         const m = text.match(/"OPENAI_API_KEY":"([^"]+)"/);
         if (m) openaiKey = m[1];
       } catch {}
     }
   }
-
   if (openaiKey) {
     return { type: 'openai', key: openaiKey };
   }
-
   return null;
 }
 
 aiProvider = loadAiProvider();
-console.log(
-  'AI provider:',
-  aiProvider?.type || 'none (set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env)'
-);
+console.log('AI provider:', aiProvider?.type || 'none (set ANTHROPIC_API_KEY or OPENAI_API_KEY in .env)');
 
+// Cache for conversation lists (refreshed every 5 min)
 let cache = { conversations: null, lastLoaded: 0 };
 const CACHE_TTL = 5 * 60 * 1000;
 
@@ -99,6 +89,9 @@ function getAllConversations(forceRefresh = false) {
   return all;
 }
 
+// ── API Routes ─────────────────────────────────────────────────────────────
+
+// List all conversations
 app.get('/api/conversations', (req, res) => {
   try {
     const { source, q, page = 1, limit = 50 } = req.query;
@@ -110,26 +103,29 @@ app.get('/api/conversations', (req, res) => {
 
     if (q) {
       const lower = q.toLowerCase();
-      conversations = conversations.filter(
-        c => c.title?.toLowerCase().includes(lower) || c.project?.toLowerCase().includes(lower)
+      conversations = conversations.filter(c =>
+        c.title?.toLowerCase().includes(lower) ||
+        c.project?.toLowerCase().includes(lower)
       );
     }
 
     const total = conversations.length;
     const start = (page - 1) * limit;
-    const items = conversations.slice(start, start + parseInt(limit, 10));
+    const items = conversations.slice(start, start + parseInt(limit));
 
-    res.json({ total, page: parseInt(page, 10), limit: parseInt(limit, 10), items });
+    res.json({ total, page: parseInt(page), limit: parseInt(limit), items });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
+// Get single conversation messages
 app.get('/api/conversations/:id', (req, res) => {
   try {
     const id = decodeURIComponent(req.params.id);
     const parts = id.split('::');
     const source = parts[0];
+    const conversation = getAllConversations().find(c => c.id === id) || null;
 
     let messages = [];
 
@@ -144,12 +140,13 @@ app.get('/api/conversations/:id', (req, res) => {
       messages = cursorReader.getConversation(sessionId);
     }
 
-    res.json({ id, messages });
+    res.json({ id, messages, tokenUsage: conversation?.tokenUsage || null });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
+// Stats
 app.get('/api/stats', (req, res) => {
   try {
     const all = getAllConversations();
@@ -164,12 +161,11 @@ app.get('/api/stats', (req, res) => {
 });
 
 function clipText(value, limit = 400) {
-  const text =
-    typeof value === 'string'
-      ? value
-      : value == null
-        ? ''
-        : JSON.stringify(value, null, 2);
+  const text = typeof value === 'string'
+    ? value
+    : value == null
+      ? ''
+      : JSON.stringify(value, null, 2);
   const normalized = text.replace(/\r\n/g, '\n').trim();
   if (!normalized) return '';
   return normalized.length > limit
@@ -190,7 +186,7 @@ function formatSummaryMessage(message) {
   const text = message.text || message.content || '';
 
   if (message.role === 'user') {
-    return `User:\n${clipText(text, 1600)}`;
+    return `👤 User:\n${clipText(text, 1600)}`;
   }
 
   if (message.role === 'assistant') {
@@ -200,32 +196,26 @@ function formatSummaryMessage(message) {
       parts.push(`[Declared tools] ${message.toolUses.map(t => t.name).join(', ')}`);
     }
     if (message.relevantFiles?.length) {
-      parts.push(
-        `[Relevant files] ${summarizeArray(
-          message.relevantFiles,
-          f => {
-            const raw = f?.uri?.path || f?.path || f;
-            return typeof raw === 'string' ? raw.split(/[/\\]/).pop() : '';
-          },
-          8
-        )}`
-      );
+      parts.push(`[Relevant files] ${summarizeArray(message.relevantFiles, f => {
+        const raw = f?.uri?.path || f?.path || f;
+        return typeof raw === 'string' ? raw.split(/[/\\]/).pop() : '';
+      }, 8)}`);
     }
     if (message.webReferences?.length) {
       parts.push(`[Web refs] ${summarizeArray(message.webReferences, r => r.title || r.url, 6)}`);
     }
-    return `Assistant${parts.length ? `\n${parts.join('\n')}` : ''}\n${clipText(text, 1600)}`;
+    return `🤖 Assistant${parts.length ? `\n${parts.join('\n')}` : ''}\n${clipText(text, 1600)}`;
   }
 
   if (message.role === 'thinking') {
-    return `Thinking:\n${clipText(text, 1200)}`;
+    return `💭 Thinking:\n${clipText(text, 1200)}`;
   }
 
   if (message.role === 'tool') {
     const parts = [];
     const label = message.toolName || message.name || 'tool';
     const description = message.toolDescription ? ` - ${message.toolDescription}` : '';
-    parts.push(`Tool ${label}${description}`);
+    parts.push(`🔧 ${label}${description}`);
     if (message.toolStatus) parts.push(`[Status] ${message.toolStatus}`);
     if (message.toolInput) parts.push(`[Input]\n${clipText(message.toolInput, 1200)}`);
     if (message.toolOutput) parts.push(`[Output]\n${clipText(message.toolOutput, 1200)}`);
@@ -238,6 +228,7 @@ function formatSummaryMessage(message) {
   return '';
 }
 
+// AI Summarize a conversation
 app.post('/api/summarize', async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -251,6 +242,7 @@ app.post('/api/summarize', async (req, res) => {
       return res.end();
     }
 
+    // Build conversation text for the prompt
     const convText = messages
       .filter(m => ['user', 'assistant', 'thinking', 'tool'].includes(m.role))
       .slice(0, 120)
@@ -276,33 +268,41 @@ app.post('/api/summarize', async (req, res) => {
 请用中文输出，格式如下（使用 Markdown）：
 
 ## 问题背景
+（用1-3句话描述用户面临的具体问题或情境）
 
 ## 用户意图 (Intent)
+（用户的核心目标、约束条件、偏好和想要达成的结果）
 
 ## 意图演化
+（如果用户目标在对话中有变化、补充、收窄或扩展，按顺序写出来；如果没有，明确写“意图基本稳定”）
 
 ## Agent 的思路与判断
+（Agent 如何理解问题，提出了哪些假设，如何缩小问题范围，如何根据证据修正判断）
 
 ## 策略与执行路径
+（按时间顺序描述 Agent 采用了哪些策略、调用了哪些工具、看了哪些证据、做了哪些验证）
 
 ## 关键决策与转折点
+（列出最重要的发现、报错、修复、验证结果，以及它们如何改变后续动作）
 
 ## 解决方案与结果
+（最终给出的方案、实际修改或执行过的动作、是否验证成功、还剩什么风险）
 
 ## 核心洞察
+（这次对话最有价值的认识，尤其是关于意图识别、问题拆解、策略选择或调试逻辑的洞察）
 
-## 标签`;
+## 标签
+（给这次对话打2-5个关键词标签，用于分类检索）`;
 
     if (!aiProvider) {
-      res.write(
-        `data: ${JSON.stringify({ error: '未配置 AI API Key。请在 .env 文件中设置 ANTHROPIC_API_KEY 或 OPENAI_API_KEY' })}\n\n`
-      );
+      res.write(`data: ${JSON.stringify({ error: '未配置 AI API Key。请在 .env 文件中设置 ANTHROPIC_API_KEY 或 OPENAI_API_KEY' })}\n\n`);
       return res.end();
     }
 
     const userPrompt = `请分析以下对话：\n\n**来源**: ${source}\n**标题**: ${title}\n\n${convText}`;
 
     if (aiProvider.type === 'anthropic') {
+      const Anthropic = require('@anthropic-ai/sdk');
       const stream = await aiProvider.client.messages.stream({
         model: 'claude-sonnet-4-6',
         max_tokens: 2200,
@@ -315,11 +315,12 @@ app.post('/api/summarize', async (req, res) => {
         }
       }
     } else if (aiProvider.type === 'openai') {
+      // Use OpenAI streaming via fetch
       const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${aiProvider.key}`,
+          'Authorization': `Bearer ${aiProvider.key}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
@@ -360,10 +361,12 @@ app.post('/api/summarize', async (req, res) => {
   }
 });
 
+// ── Summaries (persisted to disk) ─────────────────────────────────────────
 const SUMMARIES_DIR = path.join(__dirname, 'summaries');
 if (!fs.existsSync(SUMMARIES_DIR)) fs.mkdirSync(SUMMARIES_DIR);
 
 function summaryFile(id) {
+  // Keep filenames Windows-safe while preserving a readable conversation id.
   return path.join(SUMMARIES_DIR, id.replace(/[^a-zA-Z0-9_-]/g, '_') + '.md');
 }
 
@@ -380,26 +383,29 @@ app.post('/api/summaries/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// Debug: inspect raw Cursor message structure
 app.get('/api/debug/cursor/:sessionId', (req, res) => {
   try {
     const msgs = cursorReader.getConversation(req.params.sessionId);
-    res.json(
-      msgs.slice(0, 3).map(m => ({
-        role: m.role,
-        text: m.text?.slice(0, 100),
-        codeBlocksCount: m.codeBlocks?.length,
-        codeBlockSample: m.codeBlocks?.[0],
-        relevantFilesCount: m.relevantFiles?.length,
-        relevantFileSample: m.relevantFiles?.[0],
-      }))
-    );
+    // Return first few messages with full structure
+    res.json(msgs.slice(0, 3).map(m => ({
+      role: m.role,
+      text: m.text?.slice(0, 100),
+      codeBlocksCount: m.codeBlocks?.length,
+      codeBlockSample: m.codeBlocks?.[0],
+      relevantFilesCount: m.relevantFiles?.length,
+      relevantFileSample: m.relevantFiles?.[0],
+    })));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
+// ── Start ──────────────────────────────────────────────────────────────────
+
 const PORT = process.env.PORT || 3738;
 app.listen(PORT, () => {
-  console.log(`\nChronicler running at http://localhost:${PORT}\n`);
+  console.log(`\n✅ Conversation Viewer running at http://localhost:${PORT}\n`);
+  // Preload cache in background
   setTimeout(() => getAllConversations(), 500);
 });

@@ -8,18 +8,9 @@ const SESSION_INDEX = path.join(CODEX_DIR, 'session_index.jsonl');
 
 function readJsonlFile(filePath) {
   if (!fs.existsSync(filePath)) return [];
-  return fs
-    .readFileSync(filePath, 'utf8')
-    .trim()
-    .split('\n')
-    .filter(Boolean)
-    .map(line => {
-      try {
-        return JSON.parse(line);
-      } catch {
-        return null;
-      }
-    })
+  return fs.readFileSync(filePath, 'utf8')
+    .trim().split('\n').filter(Boolean)
+    .map(line => { try { return JSON.parse(line); } catch { return null; } })
     .filter(Boolean);
 }
 
@@ -32,13 +23,17 @@ function loadSessionIndex() {
   return index;
 }
 
+// Extract just the user's actual request from the Codex message
+// which prepends IDE context like "# Context from my IDE setup:\n...\n## My request for Codex:\n<actual>"
 function extractUserText(rawMessage) {
   if (!rawMessage) return '';
 
+  // Try to extract from "## My request for Codex:" section
   const marker = /##\s*My request for Codex:\s*\n([\s\S]+)/i;
   const m = rawMessage.match(marker);
   if (m) return m[1].trim();
 
+  // Fallback: strip common IDE context headers
   const stripped = rawMessage
     .replace(/^#\s*Context from my IDE setup:[\s\S]*?(?=\n[^#\n]|\n##)/m, '')
     .replace(/^##\s*Open tabs:[\s\S]*?(?=\n[^#\n]|\n##|\n$)/m, '')
@@ -47,11 +42,24 @@ function extractUserText(rawMessage) {
   return stripped || rawMessage;
 }
 
+function normalizeCodexTokenUsage(info) {
+  const usage = info?.total_token_usage || info?.last_token_usage;
+  if (!usage) return null;
+  const input = usage.input_tokens || 0;
+  const output = usage.output_tokens || 0;
+  const reasoning = usage.reasoning_output_tokens || 0;
+  const cachedInput = usage.cached_input_tokens || 0;
+  const total = usage.total_tokens || (input + output);
+  if (!input && !output && !reasoning && !cachedInput) return null;
+  return { input, output, total, reasoning, cachedInput };
+}
+
 function parseSessionFile(filePath) {
   const entries = readJsonlFile(filePath);
   const messages = [];
   let meta = null;
   const toolCalls = new Map();
+  let tokenUsage = null;
 
   function extractReasoningText(payload) {
     if (!payload) return '';
@@ -77,6 +85,13 @@ function parseSessionFile(filePath) {
       continue;
     }
 
+    if (entry.type === 'event_msg' && entry.payload?.type === 'token_count') {
+      const normalized = normalizeCodexTokenUsage(entry.payload.info);
+      if (normalized) tokenUsage = normalized;
+      continue;
+    }
+
+    // User messages from event_msg
     if (entry.type === 'event_msg' && entry.payload?.type === 'user_message') {
       const text = extractUserText(entry.payload.message || '');
       if (text.trim()) {
@@ -89,6 +104,7 @@ function parseSessionFile(filePath) {
       continue;
     }
 
+    // Assistant final answers from event_msg
     if (entry.type === 'event_msg' && entry.payload?.type === 'agent_message') {
       const phase = entry.payload.phase;
       const text = entry.payload.message || '';
@@ -118,11 +134,7 @@ function parseSessionFile(filePath) {
 
     if (entry.type === 'response_item' && entry.payload?.type === 'function_call') {
       const input = (() => {
-        try {
-          return JSON.parse(entry.payload.arguments || '{}');
-        } catch {
-          return entry.payload.arguments || '';
-        }
+        try { return JSON.parse(entry.payload.arguments || '{}'); } catch { return entry.payload.arguments || ''; }
       })();
       const toolMsg = {
         role: 'tool',
@@ -153,25 +165,26 @@ function parseSessionFile(filePath) {
       continue;
     }
 
+    // Tool use events
     if (entry.type === 'response_item' && entry.payload?.type === 'web_search_call') {
       const action = entry.payload.action;
       const queries = action?.queries || (action?.query ? [action.query] : []);
       if (queries.length) {
         messages.push({
           role: 'tool',
-          text: `Web search: ${queries.join(' | ')}`,
+          text: `🔍 Web search: ${queries.join(' | ')}`,
           timestamp: entry.timestamp,
         });
       }
+      continue;
     }
   }
 
-  return { meta, messages };
+  return { meta, messages, tokenUsage };
 }
 
 function listAllSessionFiles() {
   const files = [];
-
   function walk(dir) {
     if (!fs.existsSync(dir)) return;
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -180,7 +193,6 @@ function listAllSessionFiles() {
       else if (entry.name.endsWith('.jsonl')) files.push(full);
     }
   }
-
   walk(SESSIONS_DIR);
   return files;
 }
@@ -194,7 +206,7 @@ function listConversations() {
 
   for (const filePath of sessionFiles) {
     try {
-      const { meta, messages } = parseSessionFile(filePath);
+      const { meta, messages, tokenUsage } = parseSessionFile(filePath);
       const realMessages = messages.filter(m => m.role === 'user' || m.role === 'assistant');
       if (realMessages.length === 0) continue;
 
@@ -215,9 +227,10 @@ function listConversations() {
         lastTimestamp: lastMsg?.timestamp || meta?.timestamp || '',
         messageCount: realMessages.length,
         model: meta?.model_provider,
+        tokenUsage,
       });
     } catch {
-      // Skip unreadable sessions.
+      // skip
     }
   }
 

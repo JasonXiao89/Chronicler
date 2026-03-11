@@ -3,12 +3,7 @@ const os = require('os');
 
 const CURSOR_DB = path.join(
   os.homedir(),
-  'AppData',
-  'Roaming',
-  'Cursor',
-  'User',
-  'globalStorage',
-  'state.vscdb'
+  'AppData', 'Roaming', 'Cursor', 'User', 'globalStorage', 'state.vscdb'
 );
 
 let db = null;
@@ -35,6 +30,8 @@ function parseComposerData(row) {
   }
 }
 
+// ── Old format: data.conversation array ──────────────────────────────────────
+
 function listFromOldFormat(data, composerId) {
   const conversation = data.conversation || [];
   if (conversation.length < 2) return null;
@@ -54,6 +51,7 @@ function listFromOldFormat(data, composerId) {
     lastTimestamp: lastUpdatedAt,
     messageCount: conversation.filter(m => m.type === 1 || m.type === 2).length,
     status: data.status,
+    tokenUsage: aggregateCursorTokenUsageFromOldFormat(data),
     _format: 'old',
   };
 }
@@ -69,12 +67,16 @@ function getFromOldFormat(data) {
       codeBlocks: m.codeBlocks || [],
       relevantFiles: m.relevantFiles || [],
       webReferences: m.webReferences || [],
+      tokenUsage: normalizeCursorTokenUsage(m.tokenCount),
     }));
 }
 
+// ── New format: fullConversationHeadersOnly + bubbleId:<composerId>:<id> ──────
+
 function fetchBubble(composerId, bubbleId) {
   try {
-    const row = db.prepare('SELECT value FROM cursorDiskKV WHERE key = ?').get(`bubbleId:${composerId}:${bubbleId}`);
+    const row = db.prepare("SELECT value FROM cursorDiskKV WHERE key = ?")
+      .get(`bubbleId:${composerId}:${bubbleId}`);
     if (!row) return null;
     return JSON.parse(row.value);
   } catch {
@@ -89,6 +91,48 @@ function parseJsonSafe(value) {
   } catch {
     return value;
   }
+}
+
+function normalizeCursorTokenUsage(tokenCount) {
+  if (!tokenCount || typeof tokenCount !== 'object') return null;
+  const input = tokenCount.inputTokens || 0;
+  const output = tokenCount.outputTokens || 0;
+  const total = input + output;
+  if (!input && !output) return null;
+  return { input, output, total, approximate: true };
+}
+
+function mergeTokenUsage(items) {
+  let input = 0;
+  let output = 0;
+  let total = 0;
+  let hasAny = false;
+
+  for (const item of items) {
+    if (!item?.tokenUsage) continue;
+    hasAny = true;
+    input += item.tokenUsage.input || 0;
+    output += item.tokenUsage.output || 0;
+    total += item.tokenUsage.total || 0;
+  }
+
+  return hasAny ? { input, output, total, approximate: true } : null;
+}
+
+function aggregateCursorTokenUsageFromOldFormat(data) {
+  return mergeTokenUsage((data.conversation || []).map(m => ({
+    tokenUsage: normalizeCursorTokenUsage(m.tokenCount),
+  })));
+}
+
+function aggregateCursorTokenUsageFromNewFormat(headers, composerId) {
+  const items = [];
+  for (const h of headers || []) {
+    const bubble = fetchBubble(composerId, h.bubbleId);
+    if (!bubble) continue;
+    items.push({ tokenUsage: normalizeCursorTokenUsage(bubble.tokenCount) });
+  }
+  return mergeTokenUsage(items);
 }
 
 function getThinkingText(bubble) {
@@ -121,6 +165,7 @@ function extractAgentStepMessages(bubble) {
       text: thinkingText,
       timestamp: bubble.createdAt || '',
       source: 'cursor',
+      tokenUsage: normalizeCursorTokenUsage(bubble.tokenCount),
     });
   }
 
@@ -142,6 +187,7 @@ function extractAgentStepMessages(bubble) {
       toolStatus: tool.status || additionalData?.status || '',
       toolInput: rawArgs || params || null,
       toolOutput: result || additionalData || null,
+      tokenUsage: normalizeCursorTokenUsage(bubble.tokenCount),
     });
   }
 
@@ -152,6 +198,7 @@ function listFromNewFormat(data, composerId) {
   const headers = data.fullConversationHeadersOnly || [];
   if (headers.length < 2) return null;
 
+  // Find first user bubble with text for title
   let title = data.name || '(no title)';
   if (!title || title === '(no title)') {
     const firstUserHeader = headers.find(h => h.type === 1);
@@ -173,8 +220,9 @@ function listFromNewFormat(data, composerId) {
     title: title || '(no title)',
     timestamp: createdAt,
     lastTimestamp: lastUpdatedAt,
-    messageCount: userCount * 2,
+    messageCount: userCount * 2, // approximate user+assistant pairs
     status: data.status,
+    tokenUsage: aggregateCursorTokenUsageFromNewFormat(headers, composerId),
     _format: 'new',
   };
 }
@@ -192,6 +240,7 @@ function getFromNewFormat(data, composerId) {
     const text = bubble.text || '';
 
     if (role === 'user') {
+      // Flush accumulated agent steps as a synthetic tool indicator
       if (agentStepCount > 0) {
         const last = messages[messages.length - 1];
         if (last && last.role === 'assistant') {
@@ -208,10 +257,13 @@ function getFromNewFormat(data, composerId) {
           codeBlocks: [],
           relevantFiles: bubble.relevantFiles || [],
           webReferences: bubble.webReferences || [],
+          tokenUsage: normalizeCursorTokenUsage(bubble.tokenCount),
         });
       }
     } else {
+      // assistant bubble
       if (!text) {
+        // Empty = agentic step (tool call, terminal command, etc.)
         messages.push(...extractAgentStepMessages(bubble));
         agentStepCount++;
       } else {
@@ -224,6 +276,7 @@ function getFromNewFormat(data, composerId) {
           relevantFiles: [],
           webReferences: bubble.webReferences || [],
           _agentSteps: agentStepCount,
+          tokenUsage: normalizeCursorTokenUsage(bubble.tokenCount),
         });
         agentStepCount = 0;
       }
@@ -232,14 +285,16 @@ function getFromNewFormat(data, composerId) {
   return messages;
 }
 
+// ── Public API ────────────────────────────────────────────────────────────────
+
 function listConversations() {
   initDb();
   if (!dbAvailable) return [];
 
   try {
-    const rows = db
-      .prepare("SELECT key, value FROM cursorDiskKV WHERE key LIKE 'composerData:%'")
-      .all();
+    const rows = db.prepare(
+      "SELECT key, value FROM cursorDiskKV WHERE key LIKE 'composerData:%'"
+    ).all();
 
     const conversations = [];
 
@@ -271,7 +326,9 @@ function getConversation(sessionId) {
   if (!dbAvailable) return [];
 
   try {
-    const row = db.prepare('SELECT value FROM cursorDiskKV WHERE key = ?').get(`composerData:${sessionId}`);
+    const row = db.prepare(
+      "SELECT value FROM cursorDiskKV WHERE key = ?"
+    ).get(`composerData:${sessionId}`);
 
     if (!row) return [];
 
