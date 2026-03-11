@@ -2,13 +2,34 @@
 
 Chronicler is a local-first conversation viewer for AI coding tools. It reads your saved chats from Claude Code, OpenAI Codex CLI, and Cursor, then lets you browse them in one interface and generate reusable summaries.
 
+Current version: `v0.7.0` (usable multi-source MVP, still evolving).
+
 ## What It Does
 
 - Aggregates conversations from multiple AI coding tools
 - Shows sessions in a single searchable web UI
 - Opens full message history for each conversation
 - Preserves tool calls, thinking, and metadata where available
-- Generates AI summaries and saves them locally in `summaries/`
+- Preserves agent-step detail from Cursor, including thinking, tool descriptions, tool inputs, and tool outputs where available
+- Surfaces token usage references for Claude and Codex sessions, with best-effort references for Cursor when available
+- Generates AI summaries focused on user intent, intent evolution, agent reasoning, strategy, execution path, and turning points
+- Saves generated summaries locally in `summaries/`
+
+## Summary Output
+
+AI summaries are designed to preserve problem-solving context, not just compress the final answer. The current summary structure includes:
+
+- `问题背景`
+- `用户意图 (Intent)`
+- `意图演化`
+- `Agent 的思路与判断`
+- `策略与执行路径`
+- `关键决策与转折点`
+- `解决方案与结果`
+- `核心洞察`
+- `标签`
+
+This makes Chronicler useful not only as a history browser, but also as a lightweight reflection and knowledge-capture tool for AI-assisted work.
 
 ## Supported Sources
 
@@ -17,6 +38,15 @@ Chronicler is a local-first conversation viewer for AI coding tools. It reads yo
 | Claude Code | `~/.claude/projects/` | JSONL |
 | OpenAI Codex CLI | `~/.codex/sessions/` | JSONL |
 | Cursor | `~/AppData/Roaming/Cursor/User/globalStorage/state.vscdb` | SQLite |
+
+## Source Coverage Notes
+
+- `Claude Code`
+  Reads user and assistant messages, thinking blocks, tool calls, tool results, and provider token usage metadata.
+- `Codex CLI`
+  Reads user messages, commentary/final answers, reasoning blocks, function calls, function call outputs, and token-count events.
+- `Cursor`
+  Reads conversations from the local SQLite database and reconstructs assistant steps, including thinking and tool traces where the underlying bubble data exposes them.
 
 ## Requirements
 
@@ -40,6 +70,8 @@ PORT=3738
 
 You can also use `OPENAI_API_KEY` instead of `ANTHROPIC_API_KEY`.
 
+If no OpenAI key is found in `.env`, Chronicler can also fall back to a key discovered from Claude Desktop config on Windows.
+
 ## Running
 
 Start the app:
@@ -57,6 +89,21 @@ npm run dev
 ```
 
 On Windows you can also double-click `start.bat`.
+
+## Current Capabilities
+
+- Browse conversations across Claude, Codex, and Cursor in one UI
+- Search by title or project
+- Inspect conversation details, timestamps, thinking blocks, tool usage, and saved summaries
+- Re-run summaries and persist them to disk
+- Review token usage references per conversation where the source exposes them
+
+## Current Limitations
+
+- Cursor token numbers are best-effort references only; many sessions expose no usable values
+- Token totals shown for Claude include cached input references, which can make the numbers look large
+- Summaries favor process fidelity over brevity, so long sessions can produce dense summary output
+- This is still an MVP, so data extraction quality depends on what each source actually records locally
 
 ## Privacy
 
