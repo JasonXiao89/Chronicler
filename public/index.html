@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronicler</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg2: #1a1d27;
+    --bg3: #242736;
+    --border: #2e3148;
+    --text: #e2e4f0;
+    --text-muted: #7b8099;
+    --accent: #7c6af7;
+    --accent2: #5b9cf6;
+    --user-bg: #1e2a3a;
+    --assistant-bg: #1a1d27;
+    --thinking-bg: #1a1e2e;
+    --claude-color: #d97757;
+    --codex-color: #10a37f;
+    --cursor-color: #5b9cf6;
+    --tag-bg: #2a2d40;
+    --scrollbar: #2e3148;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .header h1 { font-size: 16px; font-weight: 600; color: var(--accent); }
+  .stats { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+
+  .source-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .source-tab {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .source-tab.active { color: white; border-color: transparent; }
+  .source-tab[data-source="all"].active { background: var(--accent); }
+  .source-tab[data-source="claude"].active { background: var(--claude-color); }
+  .source-tab[data-source="codex"].active { background: var(--codex-color); }
+  .source-tab[data-source="cursor"].active { background: var(--cursor-color); }
+  .source-tab:hover:not(.active) { background: var(--bg3); color: var(--text); }
+
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg2);
+  }
+
+  .search-bar {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-bar input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+  }
+  .search-bar input:focus { border-color: var(--accent); }
+
+  .conv-list {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .conv-item {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .conv-item:hover { background: var(--bg3); }
+  .conv-item.active { background: var(--bg3); border-left: 3px solid var(--accent); }
+
+  .conv-source {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .conv-source.claude { background: var(--claude-color)22; color: var(--claude-color); }
+  .conv-source.codex { background: var(--codex-color)22; color: var(--codex-color); }
+  .conv-source.cursor { background: var(--cursor-color)22; color: var(--cursor-color); }
+
+  .conv-title {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+  .conv-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .load-more {
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--accent);
+    cursor: pointer;
+    border-top: 1px solid var(--border);
+  }
+  .load-more:hover { background: var(--bg3); }
+
+  .content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  .conv-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .conv-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .conv-header-info { flex: 1; min-width: 0; }
+  .conv-header-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .conv-header-meta { font-size: 12px; color: var(--text-muted); }
+
+  .btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #6b5ae6; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .message {
+    border-radius: 12px;
+    padding: 14px 16px;
+    max-width: 90%;
+  }
+  .message.user {
+    background: var(--user-bg);
+    align-self: flex-end;
+    border: 1px solid #2a3a4a;
+  }
+  .message.assistant {
+    background: var(--assistant-bg);
+    align-self: flex-start;
+    border: 1px solid var(--border);
+    max-width: 95%;
+  }
+  .message-role {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .message.user .message-role { color: var(--accent2); }
+  .message.assistant .message-role { color: var(--accent); }
+  .message-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .thinking-block {
+    background: var(--thinking-bg);
+    border: 1px solid #2a2e4a;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+  }
+  .thinking-header {
+    font-size: 11px;
+    color: #8899bb;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .thinking-header::before { content: '💭'; }
+  .thinking-content {
+    font-size: 12px;
+    color: #6677aa;
+    margin-top: 6px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    display: none;
+  }
+  .thinking-block.expanded .thinking-content { display: block; }
+
+  .tool-badge {
+    display: inline-block;
+    background: #2a1f3d;
+    border: 1px solid #4a3a6a;
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: #aa88ee;
+    margin: 2px;
+  }
+  .tool-badges { margin-top: 8px; }
+
+  .tool-call {
+    background: #1a1520;
+    border: 1px solid #3a2a4a;
+    border-left: 3px solid #7a55cc;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    font-size: 12px;
+  }
+  .tool-call-header {
+    padding: 5px 10px;
+    color: #aa88ee;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+  }
+  .tool-input {
+    margin: 0;
+    padding: 6px 10px;
+    background: #130f1a;
+    color: #c8b8ee;
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border-top: 1px solid #2a2030;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .tool-output {
+    border-top: 1px solid #2a2030;
+    cursor: pointer;
+  }
+  .tool-output-header {
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #6677aa;
+    user-select: none;
+  }
+  .tool-output-header:hover { color: #8899cc; }
+  .tool-output-content {
+    display: none;
+    margin: 0;
+    padding: 6px 10px;
+    background: #0e0c14;
+    color: #8899bb;
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: 11px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .tool-output.expanded .tool-output-content { display: block; }
+  .tool-output.expanded .tool-output-header { color: #8899cc; }
+
+  .message-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    text-align: right;
+  }
+
+  .summary-panel {
+    width: 360px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg2);
+    overflow: hidden;
+  }
+  .summary-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .summary-header::before { content: '✨'; }
+  .summary-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .summary-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 24px;
+    gap: 8px;
+  }
+  .summary-placeholder span { font-size: 32px; }
+
+  .summary-content h2 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 14px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-content h2:first-child { margin-top: 0; }
+  .summary-content p { margin-bottom: 8px; }
+  .summary-content ul, .summary-content ol {
+    margin: 4px 0 8px 16px;
+  }
+  .summary-content li { margin-bottom: 3px; }
+  .summary-content strong { color: var(--accent2); }
+  .summary-content code {
+    background: var(--bg3);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-size: 12px;
+    font-family: monospace;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 14px;
+    gap: 8px;
+  }
+  .empty-state-icon { font-size: 48px; }
+
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .blink-cursor { animation: blink 1s infinite; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🗂 Chronicler</h1>
+  <div class="source-tabs">
+    <button class="source-tab active" data-source="all" onclick="setSource('all', this)">全部</button>
+    <button class="source-tab" data-source="claude" onclick="setSource('claude', this)">Claude Code</button>
+    <button class="source-tab" data-source="codex" onclick="setSource('codex', this)">Codex</button>
+    <button class="source-tab" data-source="cursor" onclick="setSource('cursor', this)">Cursor</button>
+  </div>
+  <div class="stats" id="stats">加载中...</div>
+  <button class="btn btn-primary" onclick="refreshList()" style="font-size:12px;padding:5px 10px;">刷新</button>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="搜索对话..." oninput="onSearch(this.value)">
+    </div>
+    <div class="conv-list" id="convList">
+      <div class="loading">加载中...</div>
+    </div>
+    <div class="load-more" id="loadMore" style="display:none" onclick="loadMore()">加载更多</div>
+  </div>
+
+  <div class="content">
+    <div class="conv-view" id="convView">
+      <div class="empty-state">
+        <div class="empty-state-icon">💬</div>
+        <div>选择一个对话开始浏览</div>
+      </div>
+    </div>
+    <div class="summary-panel">
+      <div class="summary-header">AI 分析摘要</div>
+      <div class="summary-content" id="summaryContent">
+        <div class="summary-placeholder">
+          <span>✨</span>
+          <div>打开对话后点击</div>
+          <div><strong>「AI 分析」</strong>按钮</div>
+          <div style="margin-top:8px;font-size:12px">提取问题、意图、思路和解决方案</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let state = {
+  source: 'all',
+  search: '',
+  page: 1,
+  total: 0,
+  conversations: [],
+  activeId: null,
+  activeMessages: [],
+  searchTimer: null,
+  summaryRunId: 0,
+};
+
+const LIMIT = 50;
+
+async function init() {
+  await loadStats();
+  await loadConversations(true);
+}
+
+async function loadStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const data = await r.json();
+    document.getElementById('stats').textContent =
+      `共 ${data.total} 条对话 · Claude ${data.bySource.claude || 0} · Codex ${data.bySource.codex || 0} · Cursor ${data.bySource.cursor || 0}`;
+  } catch {}
+}
+
+async function loadConversations(reset = false) {
+  if (reset) {
+    state.page = 1;
+    state.conversations = [];
+  }
+
+  const params = new URLSearchParams({
+    source: state.source,
+    q: state.search,
+    page: state.page,
+    limit: LIMIT,
+  });
+
+  const r = await fetch(`/api/conversations?${params}`);
+  const data = await r.json();
+
+  state.total = data.total;
+  state.conversations = reset ? data.items : [...state.conversations, ...data.items];
+
+  renderList();
+  document.getElementById('loadMore').style.display =
+    state.conversations.length < state.total ? '' : 'none';
+}
+
+function renderList() {
+  const list = document.getElementById('convList');
+
+  if (state.conversations.length === 0) {
+    list.innerHTML = '<div class="loading">没有找到对话</div>';
+    return;
+  }
+
+  list.innerHTML = state.conversations.map(c => {
+    const date = formatDate(c.lastTimestamp || c.timestamp);
+    const project = c.project ? truncate(c.project.split(/[/\\]/).pop() || c.project, 20) : '';
+    const isActive = c.id === state.activeId;
+
+    return `
+      <div class="conv-item ${isActive ? 'active' : ''}" onclick="openConversation('${escapeAttr(c.id)}')">
+        <div><span class="conv-source ${c.source}">${c.source}</span></div>
+        <div class="conv-title">${escape(c.title || '(无标题)')}</div>
+        <div class="conv-meta">
+          <span>${project}</span>
+          <span>${date} · ${c.messageCount}条</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function openConversation(id) {
+  state.summaryRunId += 1;
+  state.activeId = id;
+  renderList();
+
+  const conv = state.conversations.find(c => c.id === id);
+  const view = document.getElementById('convView');
+
+  view.innerHTML = `
+    <div class="conv-header">
+      <div class="conv-header-info">
+        <div class="conv-header-title">${escape(conv?.title || '...')}</div>
+        <div class="conv-header-meta">
+          <span class="conv-source ${conv?.source}">${conv?.source}</span>
+          ${conv?.project ? ` · ${escape(conv.project)}` : ''}
+          · ${formatDate(conv?.lastTimestamp)}
+        </div>
+      </div>
+      <button class="btn btn-primary" id="summarizeBtn" onclick="summarize()">✨ AI 分析</button>
+    </div>
+    <div class="messages" id="messages"><div class="loading">加载中...</div></div>`;
+
+  fetch(`/api/summaries/${encodeURIComponent(id)}`)
+    .then(r => r.json())
+    .then(({ text }) => {
+      if (state.activeId !== id) return;
+      if (text) {
+        document.getElementById('summaryContent').innerHTML =
+          renderMarkdown(text) + '<div style="margin-top:12px;text-align:right"><button class="btn" onclick="summarize()" style="font-size:11px;padding:3px 8px;opacity:0.6">重新分析</button></div>';
+        const btn = document.getElementById('summarizeBtn');
+        if (btn) btn.textContent = '🔄 重新分析';
+      } else {
+        document.getElementById('summaryContent').innerHTML = `
+          <div class="summary-placeholder">
+            <span>✨</span>
+            <div>点击「AI 分析」按钮</div>
+            <div>分析这次对话</div>
+          </div>`;
+      }
+    })
+    .catch(() => {});
+
+  try {
+    const r = await fetch(`/api/conversations/${encodeURIComponent(id)}`);
+    const data = await r.json();
+    if (state.activeId !== id) return;
+    state.activeMessages = data.messages;
+    renderMessages(data.messages);
+  } catch (e) {
+    if (state.activeId !== id) return;
+    document.getElementById('messages').innerHTML = `<div class="loading" style="color:red">加载失败: ${e.message}</div>`;
+  }
+}
+
+function renderMessages(messages) {
+  const container = document.getElementById('messages');
+  if (!messages || messages.length === 0) {
+    container.innerHTML = '<div class="loading">没有消息</div>';
+    return;
+  }
+
+  const filtered = messages.filter(m => ['user', 'assistant', 'thinking', 'tool'].includes(m.role));
+  const grouped = [];
+  let pendingMeta = [];
+
+  for (const m of filtered) {
+    if (m.role === 'thinking' || m.role === 'tool') {
+      pendingMeta.push(m);
+    } else {
+      grouped.push({ msg: m, meta: pendingMeta });
+      pendingMeta = [];
+    }
+  }
+  if (pendingMeta.length) grouped.push({ msg: null, meta: pendingMeta });
+
+  container.innerHTML = grouped.map(({ msg, meta }) => {
+    if (!msg) return '';
+
+    const isUser = msg.role === 'user';
+    const time = msg.timestamp ? `<div class="message-time">${formatTime(msg.timestamp)}</div>` : '';
+
+    let thinkingHtml = '';
+    const thinkingItems = [];
+    if (msg.thinking) thinkingItems.push(msg.thinking);
+    meta.filter(m => m.role === 'thinking').forEach(m => thinkingItems.push(m.text));
+
+    if (thinkingItems.length) {
+      const content = thinkingItems.map(t => escape(t)).join('\n\n---\n\n');
+      thinkingHtml = `
+        <div class="thinking-block" onclick="toggleThinking(this)">
+          <div class="thinking-header">思考过程 (点击展开)</div>
+          <div class="thinking-content">${content}</div>
+        </div>`;
+    }
+
+    let toolsHtml = '';
+
+    if (msg.toolUses?.length) {
+      const pairs = msg.toolUses.filter(t => t.name !== '__result__');
+
+      toolsHtml = pairs.map(t => {
+        const inputText = formatToolInput(t.name, t.input);
+        const outputHtml = t.output
+          ? `<div class="tool-output" onclick="toggleToolOutput(this)">
+               <div class="tool-output-header">▶ 输出 (点击展开)</div>
+               <pre class="tool-output-content">${escape(t.output)}</pre>
+             </div>`
+          : '';
+        return `<div class="tool-call">
+          <div class="tool-call-header">🔧 ${escape(t.name)}</div>
+          ${inputText ? `<pre class="tool-input">${escape(inputText)}</pre>` : ''}
+          ${outputHtml}
+        </div>`;
+      }).join('');
+    }
+
+    if (meta.some(m => m.role === 'tool')) {
+      const codexTools = meta.filter(m => m.role === 'tool').map(m => {
+        if (m.toolName) {
+          const inputText = formatToolInput(m.toolName, m.toolInput);
+          const outputText = formatToolOutput(m.toolOutput);
+          const statusText = m.toolStatus ? ` <span style="opacity:0.6">(${escape(m.toolStatus)})</span>` : '';
+          const descriptionHtml = m.toolDescription
+            ? `<div style="font-size:12px;color:var(--text-muted);margin:2px 0 6px 0">${escape(m.toolDescription)}</div>`
+            : '';
+          const outputHtml = outputText
+            ? `<div class="tool-output" onclick="toggleToolOutput(this)">
+                 <div class="tool-output-header">▶ 输出 (点击展开)</div>
+                 <pre class="tool-output-content">${escape(outputText)}</pre>
+               </div>`
+            : '';
+          return `<div class="tool-call">
+            <div class="tool-call-header">🔧 ${escape(m.toolName)}${statusText}</div>
+            ${descriptionHtml}
+            ${inputText ? `<pre class="tool-input">${escape(inputText)}</pre>` : ''}
+            ${outputHtml}
+          </div>`;
+        }
+        return `<div class="tool-call"><div class="tool-call-header">${escape(m.text)}</div></div>`;
+      }).join('');
+      toolsHtml = (toolsHtml || '') + codexTools;
+    }
+
+    const text = escape(msg.text || msg.content || '').trim();
+
+    let cursorExtras = '';
+    if (msg.relevantFiles?.length) {
+      const files = msg.relevantFiles.map(f => {
+        const name = (f.uri?.path || f.path || f).split(/[/\\]/).pop();
+        return `<span class="tool-badge">📄 ${escape(name)}</span>`;
+      }).join('');
+      cursorExtras += `<div class="tool-badges" style="margin-bottom:6px">${files}</div>`;
+    }
+    if (msg.codeBlocks?.length) {
+      const codeFiles = msg.codeBlocks.map(b => {
+        const fullPath = b.uri?.fsPath || b.uri?.path || '';
+        const name = fullPath.split(/[/\\]/).pop() || 'file';
+        return `<span class="tool-badge">📝 ${escape(name)}</span>`;
+      }).join('');
+      cursorExtras += `<div class="tool-badges" style="margin-bottom:6px">${codeFiles}</div>`;
+    }
+    if (msg.webReferences?.length) {
+      const refs = msg.webReferences.map(r =>
+        `<span class="tool-badge">🌐 ${escape((r.title || r.url || '').slice(0, 40))}</span>`
+      ).join('');
+      cursorExtras += `<div class="tool-badges" style="margin-bottom:6px">${refs}</div>`;
+    }
+    if (msg._agentSteps > 0) {
+      cursorExtras += `<div class="tool-badges" style="margin-bottom:6px"><span class="tool-badge" style="opacity:0.6">⚙ ${msg._agentSteps} 个 agent 步骤</span></div>`;
+    }
+
+    return `
+      <div class="message ${isUser ? 'user' : 'assistant'}">
+        <div class="message-role">${isUser ? '用户' : 'AI 助手'}</div>
+        ${toolsHtml}
+        ${thinkingHtml}
+        ${cursorExtras}
+        ${text ? `<div class="message-text">${text}</div>` : ''}
+        ${time}
+      </div>`;
+  }).join('');
+}
+
+function toggleToolOutput(el) {
+  el.classList.toggle('expanded');
+  const header = el.querySelector('.tool-output-header');
+  header.textContent = el.classList.contains('expanded') ? '▼ 输出 (点击收起)' : '▶ 输出 (点击展开)';
+}
+
+function formatToolInput(name, input) {
+  if (!input) return '';
+  if (name === 'Bash' && input.command) return input.command;
+  if (name === 'Read' && input.file_path) return input.file_path;
+  if (name === 'Write' && input.file_path) return `${input.file_path}\n[content: ${(input.content || '').length} chars]`;
+  if (name === 'Edit' && input.file_path) return `${input.file_path}\n- ${(input.old_string || '').slice(0, 60).replace(/\n/g, '↵')}\n+ ${(input.new_string || '').slice(0, 60).replace(/\n/g, '↵')}`;
+  if (name === 'Grep' && input.pattern) return `pattern: ${input.pattern}${input.path ? '\npath: ' + input.path : ''}`;
+  if (name === 'Glob' && input.pattern) return `pattern: ${input.pattern}`;
+  if (name === 'WebSearch' && input.query) return input.query;
+  if (name === 'WebFetch' && input.url) return input.url;
+  if (name === 'Agent' && input.prompt) return `[${input.subagent_type || 'agent'}] ${input.prompt.slice(0, 120)}`;
+  return Object.entries(input).map(([k, v]) =>
+    `${k}: ${typeof v === 'string' ? v.slice(0, 100) : JSON.stringify(v).slice(0, 100)}`
+  ).join('\n');
+}
+
+function formatToolOutput(output) {
+  if (!output) return '';
+  let text = '';
+  if (typeof output === 'string') {
+    text = output;
+  } else {
+    try {
+      text = JSON.stringify(output, null, 2);
+    } catch {
+      text = String(output);
+    }
+  }
+  return text.length > 4000 ? `${text.slice(0, 4000)}\n\n... [truncated]` : text;
+}
+
+function toggleThinking(el) {
+  el.classList.toggle('expanded');
+  const header = el.querySelector('.thinking-header');
+  header.textContent = el.classList.contains('expanded')
+    ? '思考过程 (点击收起)' : '思考过程 (点击展开)';
+}
+
+async function summarize() {
+  const summaryId = state.activeId;
+  const summaryMessages = state.activeMessages;
+  const summaryRunId = ++state.summaryRunId;
+  const conv = state.conversations.find(c => c.id === summaryId);
+  if (!summaryMessages?.length) return;
+
+  const isCurrentSummary = () =>
+    state.activeId === summaryId && state.summaryRunId === summaryRunId;
+
+  const btn = document.getElementById('summarizeBtn');
+  btn.disabled = true;
+  btn.textContent = '分析中...';
+
+  const summaryEl = document.getElementById('summaryContent');
+  summaryEl.innerHTML = '<div class="loading">AI 正在分析中<span class="blink-cursor">▌</span></div>';
+
+  let fullText = '';
+
+  try {
+    const resp = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: summaryMessages,
+        title: conv?.title || '',
+        source: conv?.source || '',
+      }),
+    });
+
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      let message = `HTTP ${resp.status}`;
+      try {
+        const data = JSON.parse(errorText);
+        if (data?.error) message = data.error;
+      } catch {
+        if (errorText?.trim()) message = errorText.trim();
+      }
+      throw new Error(message);
+    }
+
+    if (!resp.body) {
+      throw new Error('摘要响应为空');
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const data = JSON.parse(line.slice(6));
+          if (data.text) {
+            fullText += data.text;
+            if (isCurrentSummary()) {
+              summaryEl.innerHTML = renderMarkdown(fullText) + '<span class="blink-cursor">▌</span>';
+            }
+          }
+          if (data.done) {
+            if (fullText) {
+              await fetch(`/api/summaries/${encodeURIComponent(summaryId)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: fullText }),
+              });
+            }
+            if (isCurrentSummary()) {
+              summaryEl.innerHTML = renderMarkdown(fullText) +
+                '<div style="margin-top:12px;text-align:right"><button class="btn" onclick="summarize()" style="font-size:11px;padding:3px 8px;opacity:0.6">重新分析</button></div>';
+              const finalBtn = document.getElementById('summarizeBtn');
+              if (finalBtn) finalBtn.textContent = '🔄 重新分析';
+            }
+          }
+          if (data.error) {
+            if (isCurrentSummary()) {
+              summaryEl.innerHTML = `<div style="color:red">错误: ${data.error}</div>`;
+            }
+          }
+        } catch {}
+      }
+    }
+  } catch (e) {
+    if (isCurrentSummary()) {
+      summaryEl.innerHTML = `<div style="color:red">请求失败: ${e.message}</div>`;
+    }
+  }
+
+  if (isCurrentSummary()) {
+    btn.disabled = false;
+    btn.textContent = fullText ? '🔄 重新分析' : '✨ AI 分析';
+  }
+}
+
+function setSource(source, el) {
+  state.source = source;
+  document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadConversations(true);
+}
+
+function onSearch(val) {
+  clearTimeout(state.searchTimer);
+  state.search = val;
+  state.searchTimer = setTimeout(() => loadConversations(true), 300);
+}
+
+async function refreshList() {
+  const r = await fetch(`/api/conversations?${new URLSearchParams({ source: state.source, q: state.search, page: 1, limit: LIMIT, refresh: 1 })}`);
+  const data = await r.json();
+  state.total = data.total;
+  state.conversations = data.items;
+  state.page = 1;
+  renderList();
+  await loadStats();
+  document.getElementById('loadMore').style.display = state.conversations.length < state.total ? '' : 'none';
+}
+
+function loadMore() {
+  state.page++;
+  loadConversations(false);
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^### (.+)$/gm, '<h3 style="font-size:12px;color:var(--text-muted);margin:10px 0 4px">$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(?!<[hup])(.+)$/gm, m => m.trim() ? m : '')
+    .replace(/^<\/p>|^<p>$/gm, '');
+}
+
+function escape(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function escapeAttr(str) {
+  return String(str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function truncate(str, n) {
+  return str.length > n ? str.slice(0, n) + '…' : str;
+}
+
+function formatDate(ts) {
+  if (!ts) return '';
+  const d = new Date(typeof ts === 'number' ? ts * 1000 : ts);
+  if (Number.isNaN(d.getTime())) return '';
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+  if (diff < 2592000000) return `${Math.floor(diff / 86400000)}天前`;
+  return d.toLocaleDateString('zh-CN');
+}
+
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = new Date(typeof ts === 'number' ? ts * 1000 : ts);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+init();
+</script>
+</body>
+</html>
