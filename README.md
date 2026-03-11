@@ -8,12 +8,25 @@ Current version: `v0.7.0` (usable multi-source MVP, still evolving).
 
 - Aggregates conversations from multiple AI coding tools
 - Shows sessions in a single searchable web UI
+- Separates conversation browsing from a dedicated analytics dashboard
 - Opens full message history for each conversation
 - Preserves tool calls, thinking, and metadata where available
 - Preserves agent-step detail from Cursor, including thinking, tool descriptions, tool inputs, and tool outputs where available
 - Surfaces token usage references for Claude and Codex sessions, with best-effort references for Cursor when available
+- Visualizes conversation activity by hour and weekday/hour heatmap
 - Generates AI summaries focused on user intent, intent evolution, agent reasoning, strategy, execution path, and turning points
 - Saves generated summaries locally in `summaries/`
+
+## Dashboard
+
+The analytics dashboard provides a higher-level view of how your conversations are happening over time:
+
+- `活跃时间分布`: conversation activity by hour of day
+- `活跃热力图`: weekday x hour heatmap
+- Overview cards for active days, peak hour, and timestamp coverage
+- Per-source filtering for `Claude Code`, `Codex`, and `Cursor`
+
+Activity is currently computed from each conversation's latest known timestamp, which makes the dashboard a conversation-level activity view rather than a per-message analytics engine.
 
 ## Summary Output
 
@@ -90,11 +103,17 @@ npm run dev
 
 On Windows you can also double-click `start.bat`.
 
+## Stats Fallback Behavior
+
+If the browser is talking to an older running server process that still returns legacy `/api/stats` totals only, the frontend now falls back to computing activity stats from `/api/conversations` so the dashboard remains usable before you restart the app.
+
 ## Current Capabilities
 
 - Browse conversations across Claude, Codex, and Cursor in one UI
 - Search by title or project
+- Switch between a reading-focused conversation view and a separate dashboard view
 - Inspect conversation details, timestamps, thinking blocks, tool usage, and saved summaries
+- Review conversation activity patterns across the day and week
 - Re-run summaries and persist them to disk
 - Review token usage references per conversation where the source exposes them
 
