@@ -112,8 +112,16 @@ function parseDateInputValue(value, endOfDay = false) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function getConversationMetricValue(conversation, metric = 'conversations') {
+  if (metric === 'tokens') {
+    return Math.max(0, Number(conversation?.tokenUsage?.total || 0));
+  }
+  return 1;
+}
+
 function buildConversationStats(conversations, options = {}) {
   const source = options.source || 'all';
+  const metric = options.metric === 'tokens' ? 'tokens' : 'conversations';
   const startDate = parseDateInputValue(options.start);
   const endDate = parseDateInputValue(options.end, true);
   const filtered = conversations.filter(conversation => {
@@ -136,6 +144,8 @@ function buildConversationStats(conversations, options = {}) {
   const weekdayTotals = Array(7).fill(0);
   const activeDays = new Set();
   let withTimestamp = 0;
+  let withMetric = 0;
+  let totalMetricValue = 0;
 
   for (const conversation of filtered) {
     bySource[conversation.source] = (bySource[conversation.source] || 0) + 1;
@@ -144,12 +154,17 @@ function buildConversationStats(conversations, options = {}) {
     if (!date) continue;
 
     withTimestamp += 1;
+    const metricValue = getConversationMetricValue(conversation, metric);
+    if (metricValue > 0) {
+      withMetric += 1;
+      totalMetricValue += metricValue;
+    }
     const hour = date.getHours();
     const weekday = date.getDay();
 
-    hourly[hour].count += 1;
-    heatmap[weekday][hour] += 1;
-    weekdayTotals[weekday] += 1;
+    hourly[hour].count += metricValue;
+    heatmap[weekday][hour] += metricValue;
+    weekdayTotals[weekday] += metricValue;
 
     const dayKey = [
       date.getFullYear(),
@@ -178,6 +193,7 @@ function buildConversationStats(conversations, options = {}) {
 
   return {
     source,
+    metric,
     range: {
       start: options.start || '',
       end: options.end || '',
@@ -186,10 +202,15 @@ function buildConversationStats(conversations, options = {}) {
     bySource,
     activity: {
       basedOn: 'lastTimestamp',
+      metric,
       withTimestamp,
+      withMetric,
+      totalMetricValue,
       activeDays: activeDays.size,
       busiestHour,
       busiestWeekday,
+      maxHourlyValue: maxHourlyCount,
+      maxHeatmapValue: maxHeatmapCount,
       maxHourlyCount,
       maxHeatmapCount,
       hourly,
@@ -260,9 +281,10 @@ app.get('/api/stats', (req, res) => {
   try {
     const all = getAllConversations(req.query.refresh === '1');
     const source = typeof req.query.source === 'string' ? req.query.source : 'all';
+    const metric = typeof req.query.metric === 'string' ? req.query.metric : 'conversations';
     const start = typeof req.query.start === 'string' ? req.query.start : '';
     const end = typeof req.query.end === 'string' ? req.query.end : '';
-    res.json(buildConversationStats(all, { source, start, end }));
+    res.json(buildConversationStats(all, { source, metric, start, end }));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

@@ -268,6 +268,35 @@
     background: rgba(255, 251, 246, 0.72);
     box-shadow: var(--shadow-soft);
   }
+  .dashboard-metric-switch {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    border-radius: 14px;
+    border: 1px solid rgba(108, 89, 72, 0.1);
+    background: rgba(255, 251, 246, 0.82);
+  }
+  .metric-pill {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-soft);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+  .metric-pill:hover {
+    transform: translateY(-1px);
+    color: var(--text);
+    background: rgba(160, 123, 95, 0.08);
+    border-color: rgba(108, 89, 72, 0.12);
+  }
+  .metric-pill.active {
+    background: var(--accent);
+    color: #fffaf4;
+  }
   .dashboard-filter-group {
     display: flex;
     flex-direction: column;
@@ -1104,6 +1133,18 @@
     background: rgba(255, 248, 240, 0.04);
     border-color: rgba(223, 206, 187, 0.1);
   }
+  body[data-theme="dark"] .dashboard-metric-switch {
+    background: rgba(255, 248, 240, 0.05);
+    border-color: rgba(223, 206, 187, 0.12);
+  }
+  body[data-theme="dark"] .metric-pill {
+    color: #d7c6b7;
+  }
+  body[data-theme="dark"] .metric-pill:hover {
+    background: rgba(255, 248, 240, 0.1);
+    color: #f2e8dc;
+    border-color: rgba(223, 206, 187, 0.12);
+  }
   body[data-theme="dark"] .range-pill {
     background: rgba(255, 248, 240, 0.06);
     border-color: rgba(223, 206, 187, 0.12);
@@ -1388,6 +1429,13 @@
       </div>
       <div class="dashboard-filter-panel">
         <div class="dashboard-filter-group">
+          <div class="dashboard-filter-label">统计口径</div>
+          <div class="dashboard-metric-switch">
+            <button class="metric-pill" data-metric="tokens" onclick="setDashboardMetric('tokens', this)">Tokens</button>
+            <button class="metric-pill" data-metric="conversations" onclick="setDashboardMetric('conversations', this)">Conversations</button>
+          </div>
+        </div>
+        <div class="dashboard-filter-group">
           <div class="dashboard-filter-label">快速范围</div>
           <div class="range-pills">
             <button class="range-pill" data-range="7d" onclick="setTimePreset('7d', this)">7d</button>
@@ -1485,6 +1533,7 @@
 let state = {
   view: 'conversations',
   source: 'all',
+  metric: 'tokens',
   timeFilter: {
     preset: '1y',
     startDate: '',
@@ -1505,6 +1554,10 @@ const LIMIT = 50;
 const THEME_KEY = 'chronicler-theme';
 const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 const HEATMAP_WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const DASHBOARD_METRIC_LABELS = {
+  tokens: 'Tokens',
+  conversations: 'Conversations',
+};
 const DASHBOARD_PRESET_CONFIG = {
   '7d': { label: '近 7 天', days: 7 },
   '30d': { label: '近 30 天', days: 30 },
@@ -1554,14 +1607,14 @@ async function init() {
 async function loadStats(options = {}) {
   const requestSignature = getStatsRequestSignature();
   try {
-    const params = new URLSearchParams({ source: state.source });
+    const params = new URLSearchParams({ source: state.source, metric: state.metric });
     const rangeParams = getDashboardRangeParams();
     if (rangeParams.start) params.set('start', rangeParams.start);
     if (rangeParams.end) params.set('end', rangeParams.end);
     if (options.refresh) params.set('refresh', '1');
     const r = await fetch(`/api/stats?${params}`);
     let data = await r.json();
-    if (!hasActivityData(data) || data.source !== state.source) {
+    if (!hasActivityData(data) || data.source !== state.source || data.activity?.metric !== state.metric) {
       data = await buildStatsFallback(options.refresh);
     }
     if (requestSignature !== getStatsRequestSignature()) return;
@@ -2028,6 +2081,10 @@ function renderMarkdown(text) {
 function renderStatsSummary(data) {
   if (!data) return '统计加载失败';
   const filterLabel = getTimeFilterSummaryLabel();
+  const metric = data.metric === 'tokens' ? 'tokens' : 'conversations';
+  const scopeSummary = metric === 'tokens'
+    ? `${formatMetricValue(data.activity?.totalMetricValue || 0, metric)}`
+    : `${data.total} 条对话`;
 
   if (data.source && data.source !== 'all') {
     const sourceLabel = ({
@@ -2036,7 +2093,11 @@ function renderStatsSummary(data) {
       cursor: 'Cursor',
     })[data.source] || data.source;
     const activeDays = data.activity?.activeDays || 0;
-    return `${filterLabel} · ${sourceLabel} ${data.total} 条对话 · 活跃 ${activeDays} 天`;
+    return `${filterLabel} · ${sourceLabel} · ${scopeSummary} · 活跃 ${activeDays} 天`;
+  }
+
+  if (metric === 'tokens') {
+    return `${filterLabel} · 共 ${scopeSummary} · Claude ${data.bySource.claude||0} · Codex ${data.bySource.codex||0} · Cursor ${data.bySource.cursor||0}`;
   }
 
   return `${filterLabel} · 共 ${data.total} 条对话 · Claude ${data.bySource.claude||0} · Codex ${data.bySource.codex||0} · Cursor ${data.bySource.cursor||0}`;
@@ -2048,6 +2109,9 @@ function renderActivityDashboard(activity) {
   const hourlyChart = document.getElementById('hourlyChart');
   const heatmapGrid = document.getElementById('heatmapGrid');
   const overview = document.getElementById('analyticsOverview');
+  const metric = state.metric === 'tokens' ? 'tokens' : 'conversations';
+  const metricLabel = DASHBOARD_METRIC_LABELS[metric];
+  const maxHourlyValue = activity?.maxHourlyValue ?? activity?.maxHourlyCount ?? 0;
 
   if (!activity || !Array.isArray(activity.hourly) || !Array.isArray(activity.heatmap)) {
     hourlySummary.textContent = '按最近活跃时间统计';
@@ -2073,7 +2137,7 @@ function renderActivityDashboard(activity) {
   hourlySummary.textContent = `${busiestHourText} · ${activeDaysText}`;
   heatmapSummary.textContent = activity.busiestWeekday == null
     ? '暂无热区'
-    : `${WEEKDAY_LABELS[activity.busiestWeekday]}最活跃 · ${activity.withTimestamp || 0} 条记录`;
+    : `${WEEKDAY_LABELS[activity.busiestWeekday]}最活跃 · ${formatMetricValue(activity.totalMetricValue || 0, metric)} ${metricLabel}`;
 
   const topHourCount = activity.busiestHour == null
     ? '暂无峰值'
@@ -2081,7 +2145,6 @@ function renderActivityDashboard(activity) {
   const topWeekdayText = activity.busiestWeekday == null
     ? '暂无活跃日'
     : `${WEEKDAY_LABELS[activity.busiestWeekday]}最活跃`;
-  const maxHourlyCount = activity.maxHourlyCount || 0;
   const sourceLabel = ({
     all: '全部来源',
     claude: 'Claude Code',
@@ -2093,26 +2156,31 @@ function renderActivityDashboard(activity) {
     <div class="overview-card">
       <div class="overview-label">Scope</div>
       <div class="overview-value">${escape(sourceLabel)}</div>
-      <div class="overview-subtext">当前来源筛选</div>
+      <div class="overview-subtext">当前来源筛选 · ${escape(metricLabel)}</div>
     </div>
     <div class="overview-card">
-      <div class="overview-label">Timestamped</div>
-      <div class="overview-value">${formatCompactNumber(activity.withTimestamp || 0)}</div>
-      <div class="overview-subtext">带可解析时间的对话</div>
+      <div class="overview-label">${escape(metricLabel)}</div>
+      <div class="overview-value">${formatMetricValue(activity.totalMetricValue || 0, metric)}</div>
+      <div class="overview-subtext">${metric === 'tokens' ? `${formatCompactNumber(activity.withMetric || 0)} 条对话带 token` : '当前时间窗口内的对话总量'}</div>
     </div>
     <div class="overview-card">
       <div class="overview-label">Peak Hour</div>
       <div class="overview-value">${activity.busiestHour == null ? '-' : formatHourBucket(activity.busiestHour)}</div>
-      <div class="overview-subtext">${escape(topHourCount)} · 峰值 ${formatCompactNumber(maxHourlyCount)} 条</div>
+      <div class="overview-subtext">${escape(topHourCount)} · 峰值 ${formatMetricValue(maxHourlyValue, metric)} ${metricLabel}</div>
     </div>
     <div class="overview-card">
-      <div class="overview-label">Active Days</div>
-      <div class="overview-value">${formatCompactNumber(activity.activeDays || 0)}</div>
-      <div class="overview-subtext">${escape(topWeekdayText)}</div>
+      <div class="overview-label">${metric === 'tokens' ? 'Token Coverage' : 'Active Days'}</div>
+      <div class="overview-value">${formatCompactNumber(metric === 'tokens' ? (activity.withMetric || 0) : (activity.activeDays || 0))}</div>
+      <div class="overview-subtext">${metric === 'tokens' ? `时间覆盖 ${formatCompactNumber(activity.withTimestamp || 0)} 条对话 · ${escape(topWeekdayText)}` : escape(topWeekdayText)}</div>
     </div>`;
 
-  hourlyChart.innerHTML = renderHourlyChart(activity.hourly, activity.maxHourlyCount || 0);
-  heatmapGrid.innerHTML = renderHeatmap(activity.heatmap, activity.maxHeatmapCount || 0, activity.withTimestamp || 0);
+  hourlyChart.innerHTML = renderHourlyChart(activity.hourly, maxHourlyValue, metric);
+  heatmapGrid.innerHTML = renderHeatmap(
+    activity.heatmap,
+    activity.maxHeatmapValue ?? activity.maxHeatmapCount ?? 0,
+    activity.totalMetricValue || 0,
+    metric
+  );
 }
 
 function setView(view, el) {
@@ -2124,6 +2192,12 @@ function setView(view, el) {
 
 function setTimePreset(preset, el) {
   applyTimePresetToState(preset);
+  syncDashboardTimeFilterUi();
+  loadStats();
+}
+
+function setDashboardMetric(metric, el) {
+  state.metric = metric === 'conversations' ? 'conversations' : 'tokens';
   syncDashboardTimeFilterUi();
   loadStats();
 }
@@ -2171,6 +2245,7 @@ async function buildStatsFallback(refresh = false) {
   const conversations = await fetchConversationsForStats(state.source, refresh);
   return computeActivityFromConversations(conversations, {
     source: state.source,
+    metric: state.metric,
     start: state.timeFilter.startDate,
     end: state.timeFilter.endDate,
   });
@@ -2201,8 +2276,16 @@ async function fetchConversationsForStats(source, refresh = false) {
   return allItems;
 }
 
+function getConversationMetricValue(conversation, metric = 'conversations') {
+  if (metric === 'tokens') {
+    return Math.max(0, Number(conversation?.tokenUsage?.total || 0));
+  }
+  return 1;
+}
+
 function computeActivityFromConversations(conversations, options = {}) {
   const source = options.source || 'all';
+  const metric = options.metric === 'tokens' ? 'tokens' : 'conversations';
   const startDate = parseDateInputValue(options.start);
   const endDate = parseDateInputValue(options.end, true);
   const filtered = conversations.filter(conversation => {
@@ -2224,6 +2307,8 @@ function computeActivityFromConversations(conversations, options = {}) {
   const weekdayTotals = Array(7).fill(0);
   const activeDays = new Set();
   let withTimestamp = 0;
+  let withMetric = 0;
+  let totalMetricValue = 0;
 
   for (const conversation of filtered) {
     bySource[conversation.source] = (bySource[conversation.source] || 0) + 1;
@@ -2231,11 +2316,16 @@ function computeActivityFromConversations(conversations, options = {}) {
     if (!date) continue;
 
     withTimestamp += 1;
+    const metricValue = getConversationMetricValue(conversation, metric);
+    if (metricValue > 0) {
+      withMetric += 1;
+      totalMetricValue += metricValue;
+    }
     const hour = date.getHours();
     const weekday = date.getDay();
-    hourly[hour].count += 1;
-    heatmap[weekday][hour] += 1;
-    weekdayTotals[weekday] += 1;
+    hourly[hour].count += metricValue;
+    heatmap[weekday][hour] += metricValue;
+    weekdayTotals[weekday] += metricValue;
 
     const dayKey = [
       date.getFullYear(),
@@ -2256,6 +2346,7 @@ function computeActivityFromConversations(conversations, options = {}) {
 
   return {
     source,
+    metric,
     range: {
       start: options.start || '',
       end: options.end || '',
@@ -2264,10 +2355,15 @@ function computeActivityFromConversations(conversations, options = {}) {
     bySource,
     activity: {
       basedOn: 'lastTimestamp',
+      metric,
       withTimestamp,
+      withMetric,
+      totalMetricValue,
       activeDays: activeDays.size,
       busiestHour,
       busiestWeekday,
+      maxHourlyValue: maxHourlyCount,
+      maxHeatmapValue: maxHeatmapCount,
       maxHourlyCount,
       maxHeatmapCount,
       hourly,
@@ -2319,6 +2415,9 @@ function applyTimePresetToState(preset) {
 }
 
 function syncDashboardTimeFilterUi() {
+  document.querySelectorAll('.metric-pill').forEach(button => {
+    button.classList.toggle('active', button.dataset.metric === state.metric);
+  });
   document.querySelectorAll('.range-pill').forEach(button => {
     button.classList.toggle('active', button.dataset.range === state.timeFilter.preset);
   });
@@ -2339,6 +2438,7 @@ function getDashboardRangeParams() {
 function getStatsRequestSignature() {
   return JSON.stringify({
     source: state.source,
+    metric: state.metric,
     start: state.timeFilter.startDate || '',
     end: state.timeFilter.endDate || '',
   });
@@ -2372,7 +2472,7 @@ function formatDateInput(date) {
   ].join('-');
 }
 
-function renderHourlyChart(hourly, maxCount) {
+function renderHourlyChart(hourly, maxCount, metric = 'conversations') {
   if (!hourly.some(item => item.count > 0)) {
     return '<div class="analytics-empty">还没有可用的活跃时间数据</div>';
   }
@@ -2382,11 +2482,11 @@ function renderHourlyChart(hourly, maxCount) {
     const ratio = maxCount ? count / maxCount : 0;
     const height = count ? Math.round(18 + ratio * 96) : 8;
     const alpha = count ? (0.18 + ratio * 0.68).toFixed(3) : '0.08';
-    const value = count || '&nbsp;';
+    const value = count ? formatMetricShortValue(count, metric) : '&nbsp;';
     const label = tickHours.has(hour) ? String(hour).padStart(2, '0') : '·';
 
     return `
-      <div class="hourly-bar-wrap" title="${formatHourBucket(hour)} · ${count} 条对话">
+      <div class="hourly-bar-wrap" title="${formatHourBucket(hour)} · ${formatMetricValue(count, metric)} ${DASHBOARD_METRIC_LABELS[metric]}">
         <div class="hourly-value">${value}</div>
         <div class="hourly-bar" style="--bar-height:${height}px; --bar-alpha:${alpha}"></div>
         <div class="hourly-label">${label}</div>
@@ -2394,7 +2494,7 @@ function renderHourlyChart(hourly, maxCount) {
   }).join('');
 }
 
-function renderHeatmap(heatmap, maxCount, totalCount) {
+function renderHeatmap(heatmap, maxCount, totalCount, metric = 'conversations') {
   const hasActivity = heatmap.some(row => row.some(count => count > 0));
   if (!hasActivity) {
     return '<div class="analytics-empty">还没有可用的热力图数据</div>';
@@ -2411,12 +2511,12 @@ function renderHeatmap(heatmap, maxCount, totalCount) {
     grid += heatmap[weekday].map((count, hour) => {
       const ratio = maxCount ? count / maxCount : 0;
       const alpha = count ? (0.1 + ratio * 0.82).toFixed(3) : '0.04';
-      return `<div class="heatmap-cell" style="--heat-alpha:${alpha}" title="${WEEKDAY_LABELS[weekday]} ${formatHourBucket(hour)} · ${count} 条对话"></div>`;
+      return `<div class="heatmap-cell" style="--heat-alpha:${alpha}" title="${WEEKDAY_LABELS[weekday]} ${formatHourBucket(hour)} · ${formatMetricValue(count, metric)} ${DASHBOARD_METRIC_LABELS[metric]}"></div>`;
     }).join('');
   }
 
   grid += '</div></div>';
-  grid += `<div class="heatmap-legend"><span>周一到周日，按小时展开</span><span>${totalCount} 条带时间戳的对话</span></div>`;
+  grid += `<div class="heatmap-legend"><span>周一到周日，按小时展开</span><span>${formatMetricValue(totalCount, metric)} ${DASHBOARD_METRIC_LABELS[metric]}</span></div>`;
   return grid;
 }
 
@@ -2437,6 +2537,19 @@ function truncate(str, n) {
 
 function formatTokenNumber(value) {
   return Number(value || 0).toLocaleString('en-US');
+}
+
+function formatMetricValue(value, metric = 'conversations') {
+  if (metric === 'tokens') return formatTokenNumber(value);
+  return formatCompactNumber(value);
+}
+
+function formatMetricShortValue(value, metric = 'conversations') {
+  if (!value) return '0';
+  if (metric === 'tokens') {
+    return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: value >= 100000 ? 0 : 1 }).format(value);
+  }
+  return formatCompactNumber(value);
 }
 
 function formatCompactNumber(value) {
