@@ -95,10 +95,40 @@ function parseConversationDate(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function buildConversationStats(conversations, source = 'all') {
-  const filtered = source && source !== 'all'
-    ? conversations.filter(conversation => conversation.source === source)
-    : conversations;
+function parseDateInputValue(value, endOfDay = false) {
+  if (!value || typeof value !== 'string') return null;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    endOfDay ? 23 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 999 : 0
+  );
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function buildConversationStats(conversations, options = {}) {
+  const source = options.source || 'all';
+  const startDate = parseDateInputValue(options.start);
+  const endDate = parseDateInputValue(options.end, true);
+  const filtered = conversations.filter(conversation => {
+    if (source && source !== 'all' && conversation.source !== source) {
+      return false;
+    }
+
+    if (!startDate && !endDate) return true;
+
+    const date = parseConversationDate(conversation.lastTimestamp || conversation.timestamp);
+    if (!date) return false;
+    if (startDate && date < startDate) return false;
+    if (endDate && date > endDate) return false;
+    return true;
+  });
 
   const bySource = {};
   const hourly = Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 }));
@@ -148,6 +178,10 @@ function buildConversationStats(conversations, source = 'all') {
 
   return {
     source,
+    range: {
+      start: options.start || '',
+      end: options.end || '',
+    },
     total: filtered.length,
     bySource,
     activity: {
@@ -226,7 +260,9 @@ app.get('/api/stats', (req, res) => {
   try {
     const all = getAllConversations(req.query.refresh === '1');
     const source = typeof req.query.source === 'string' ? req.query.source : 'all';
-    res.json(buildConversationStats(all, source));
+    const start = typeof req.query.start === 'string' ? req.query.start : '';
+    const end = typeof req.query.end === 'string' ? req.query.end : '';
+    res.json(buildConversationStats(all, { source, start, end }));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

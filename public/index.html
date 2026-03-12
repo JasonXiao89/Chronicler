@@ -233,6 +233,104 @@
     padding: 22px 24px 28px;
     background: linear-gradient(180deg, rgba(251, 247, 242, 0.52), rgba(244, 237, 229, 0.86));
   }
+  .dashboard-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 18px;
+    margin-bottom: 18px;
+    padding: 0 2px;
+  }
+  .dashboard-toolbar-copy {
+    min-width: 0;
+  }
+  .dashboard-toolbar-title {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .dashboard-toolbar-note {
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.6;
+  }
+  .dashboard-filter-panel {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px 16px;
+    padding: 12px 14px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: rgba(255, 251, 246, 0.72);
+    box-shadow: var(--shadow-soft);
+  }
+  .dashboard-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .dashboard-filter-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .range-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .range-pill {
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(108, 89, 72, 0.12);
+    background: rgba(255, 251, 246, 0.82);
+    color: var(--text-soft);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  }
+  .range-pill:hover {
+    transform: translateY(-1px);
+    background: rgba(245, 236, 225, 0.92);
+    color: var(--text);
+  }
+  .range-pill.active {
+    background: var(--accent);
+    border-color: transparent;
+    color: #fffaf4;
+  }
+  .date-inputs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .date-field input {
+    min-width: 148px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(108, 89, 72, 0.14);
+    background: rgba(255, 251, 246, 0.86);
+    color: var(--text);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  .date-field input:focus {
+    outline: none;
+    border-color: rgba(160, 123, 95, 0.3);
+    background: rgba(255, 254, 251, 0.96);
+  }
   .conversation-page {
     overflow: hidden;
   }
@@ -758,7 +856,6 @@
     gap: 6px;
     letter-spacing: 0.04em;
   }
-  .thinking-header::before { content: '💭'; }
   .thinking-content {
     font-size: 12px;
     color: #766658;
@@ -891,7 +988,6 @@
     letter-spacing: 0.04em;
     font-family: Georgia, "Times New Roman", serif;
   }
-  .summary-header::before { content: '✨'; }
   .summary-content {
     flex: 1;
     overflow-y: auto;
@@ -1003,6 +1099,29 @@
   body[data-theme="dark"] .page-tabs {
     background: rgba(255, 248, 240, 0.05);
     border-color: rgba(223, 206, 187, 0.08);
+  }
+  body[data-theme="dark"] .dashboard-filter-panel {
+    background: rgba(255, 248, 240, 0.04);
+    border-color: rgba(223, 206, 187, 0.1);
+  }
+  body[data-theme="dark"] .range-pill {
+    background: rgba(255, 248, 240, 0.06);
+    border-color: rgba(223, 206, 187, 0.12);
+    color: #d7c6b7;
+  }
+  body[data-theme="dark"] .range-pill:hover {
+    background: rgba(255, 248, 240, 0.1);
+    color: #f2e8dc;
+  }
+  body[data-theme="dark"] .date-field input {
+    background: rgba(255, 248, 240, 0.05);
+    border-color: rgba(223, 206, 187, 0.12);
+    color: var(--text);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  body[data-theme="dark"] .date-field input:focus {
+    background: rgba(255, 248, 240, 0.08);
+    border-color: rgba(224, 181, 143, 0.4);
   }
   body[data-theme="dark"] .page-tab:hover:not(.active) {
     background: rgba(255, 255, 255, 0.06);
@@ -1164,6 +1283,7 @@
     .sidebar { width: 306px; }
     .summary-panel { width: 320px; }
     .stats { margin-left: 0; }
+    .dashboard-toolbar { flex-direction: column; align-items: stretch; }
     .analytics-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .dashboard { grid-template-columns: 1fr; }
   }
@@ -1179,6 +1299,20 @@
     }
     .dashboard-page {
       padding: 14px 16px 20px;
+    }
+    .dashboard-filter-panel {
+      padding: 12px;
+    }
+    .date-inputs {
+      width: 100%;
+    }
+    .date-field {
+      flex: 1;
+      min-width: 0;
+    }
+    .date-field input {
+      min-width: 0;
+      width: 100%;
     }
     .analytics-overview {
       grid-template-columns: 1fr;
@@ -1239,7 +1373,7 @@
       <button class="source-tab" data-source="codex" onclick="setSource('codex', this)">Codex</button>
       <button class="source-tab" data-source="cursor" onclick="setSource('cursor', this)">Cursor</button>
     </div>
-    <button class="btn btn-secondary theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙 深色</button>
+    <button class="btn btn-secondary theme-toggle" id="themeToggle" onclick="toggleTheme()">深色</button>
     <button class="btn btn-secondary refresh-btn" onclick="refreshList()">刷新</button>
   </div>
   <div class="stats" id="stats">加载中...</div>
@@ -1247,6 +1381,34 @@
 
 <div class="page-shell">
   <section class="page dashboard-page" id="dashboardPage">
+    <div class="dashboard-toolbar">
+      <div class="dashboard-toolbar-copy">
+        <div class="dashboard-toolbar-title">Activity Window</div>
+        <div class="dashboard-toolbar-note">按对话最近活跃时间过滤仪表盘统计，不影响左侧对话列表。</div>
+      </div>
+      <div class="dashboard-filter-panel">
+        <div class="dashboard-filter-group">
+          <div class="dashboard-filter-label">快速范围</div>
+          <div class="range-pills">
+            <button class="range-pill" data-range="7d" onclick="setTimePreset('7d', this)">7d</button>
+            <button class="range-pill" data-range="30d" onclick="setTimePreset('30d', this)">30d</button>
+            <button class="range-pill" data-range="90d" onclick="setTimePreset('90d', this)">90d</button>
+            <button class="range-pill" data-range="1y" onclick="setTimePreset('1y', this)">1y</button>
+            <button class="range-pill" data-range="all" onclick="setTimePreset('all', this)">All</button>
+          </div>
+        </div>
+        <div class="date-inputs">
+          <label class="date-field">
+            <span>开始</span>
+            <input type="date" id="dashboardStartDate" onchange="setTimeBoundary('startDate', this.value)">
+          </label>
+          <label class="date-field">
+            <span>结束</span>
+            <input type="date" id="dashboardEndDate" onchange="setTimeBoundary('endDate', this.value)">
+          </label>
+        </div>
+      </div>
+    </div>
     <div class="analytics-overview" id="analyticsOverview">
       <div class="overview-card">
         <div class="overview-label">Conversations</div>
@@ -1298,7 +1460,7 @@
       <div class="content">
         <div class="conv-view" id="convView">
           <div class="empty-state">
-            <div class="empty-state-icon">💬</div>
+            <div class="empty-state-icon">对话</div>
             <div>选择一个对话开始浏览</div>
           </div>
         </div>
@@ -1306,7 +1468,7 @@
           <div class="summary-header">AI 分析摘要</div>
           <div class="summary-content" id="summaryContent">
             <div class="summary-placeholder">
-              <span>✨</span>
+              <span>摘要</span>
               <div>打开对话后点击</div>
               <div><strong>「AI 分析」</strong>按钮</div>
               <div class="summary-placeholder-note">提取问题、意图、思路和解决方案</div>
@@ -1323,6 +1485,11 @@
 let state = {
   view: 'conversations',
   source: 'all',
+  timeFilter: {
+    preset: '1y',
+    startDate: '',
+    endDate: '',
+  },
   search: '',
   page: 1,
   total: 0,
@@ -1338,6 +1505,14 @@ const LIMIT = 50;
 const THEME_KEY = 'chronicler-theme';
 const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 const HEATMAP_WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const DASHBOARD_PRESET_CONFIG = {
+  '7d': { label: '近 7 天', days: 7 },
+  '30d': { label: '近 30 天', days: 30 },
+  '90d': { label: '近 90 天', days: 90 },
+  '1y': { label: '近 1 年', days: 365 },
+  all: { label: '全部时间', days: null },
+  custom: { label: '自定义时间', days: null },
+};
 
 function getPreferredTheme() {
   const saved = localStorage.getItem(THEME_KEY);
@@ -1352,7 +1527,7 @@ function applyTheme(theme, persist = false) {
   const toggle = document.getElementById('themeToggle');
   if (toggle) {
     const isDark = nextTheme === 'dark';
-    toggle.textContent = isDark ? '☀ 浅色' : '🌙 深色';
+    toggle.textContent = isDark ? '浅色' : '深色';
     toggle.setAttribute('aria-label', isDark ? '切换到浅色模式' : '切换到深色模式');
     toggle.setAttribute('title', isDark ? '切换到浅色模式' : '切换到深色模式');
   }
@@ -1369,34 +1544,39 @@ function toggleTheme() {
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
   applyTheme(getPreferredTheme());
+  applyTimePresetToState(state.timeFilter.preset);
+  syncDashboardTimeFilterUi();
   renderView();
   await loadStats();
   await loadConversations(true);
 }
 
 async function loadStats(options = {}) {
-  const requestedSource = state.source;
+  const requestSignature = getStatsRequestSignature();
   try {
-    const params = new URLSearchParams({ source: requestedSource });
+    const params = new URLSearchParams({ source: state.source });
+    const rangeParams = getDashboardRangeParams();
+    if (rangeParams.start) params.set('start', rangeParams.start);
+    if (rangeParams.end) params.set('end', rangeParams.end);
     if (options.refresh) params.set('refresh', '1');
     const r = await fetch(`/api/stats?${params}`);
     let data = await r.json();
-    if (!hasActivityData(data) || data.source !== requestedSource) {
-      data = await buildStatsFallback(requestedSource, options.refresh);
+    if (!hasActivityData(data) || data.source !== state.source) {
+      data = await buildStatsFallback(options.refresh);
     }
-    if (requestedSource !== state.source) return;
+    if (requestSignature !== getStatsRequestSignature()) return;
     state.stats = data;
     document.getElementById('stats').textContent = renderStatsSummary(data);
     renderActivityDashboard(data.activity);
   } catch {
     try {
-      const data = await buildStatsFallback(requestedSource, options.refresh);
-      if (requestedSource !== state.source) return;
+      const data = await buildStatsFallback(options.refresh);
+      if (requestSignature !== getStatsRequestSignature()) return;
       state.stats = data;
       document.getElementById('stats').textContent = renderStatsSummary(data);
       renderActivityDashboard(data.activity);
     } catch {
-      if (requestedSource !== state.source) return;
+      if (requestSignature !== getStatsRequestSignature()) return;
       document.getElementById('stats').textContent = '统计加载失败';
       renderActivityDashboard(null);
     }
@@ -1471,7 +1651,7 @@ async function openConversation(id) {
         </div>
         <div class="token-row" id="tokenRow">${renderTokenUsage(conv?.tokenUsage, { showUnavailable: true })}</div>
       </div>
-      <button class="btn btn-primary" id="summarizeBtn" onclick="summarize()">✨ AI 分析</button>
+      <button class="btn btn-primary" id="summarizeBtn" onclick="summarize()">AI 分析</button>
     </div>
     <div class="messages" id="messages"><div class="loading">加载中...</div></div>`;
 
@@ -1484,11 +1664,11 @@ async function openConversation(id) {
         document.getElementById('summaryContent').innerHTML =
           renderMarkdown(text) + renderSummaryAction();
         const btn = document.getElementById('summarizeBtn');
-        if (btn) btn.textContent = '🔄 重新分析';
+        if (btn) btn.textContent = '重新分析';
       } else {
         document.getElementById('summaryContent').innerHTML = `
           <div class="summary-placeholder">
-            <span>✨</span>
+            <span>摘要</span>
             <div>点击「AI 分析」按钮</div>
             <div>分析这次对话</div>
           </div>`;
@@ -1571,7 +1751,7 @@ function renderMessages(messages) {
              </div>`
           : '';
         return `<div class="tool-call">
-          <div class="tool-call-header">🔧 ${escape(t.name)}</div>
+          <div class="tool-call-header">${escape(t.name)}</div>
           ${inputText ? `<pre class="tool-input">${escape(inputText)}</pre>` : ''}
           ${outputHtml}
         </div>`;
@@ -1595,7 +1775,7 @@ function renderMessages(messages) {
                </div>`
             : '';
           return `<div class="tool-call">
-            <div class="tool-call-header">🔧 ${escape(m.toolName)}${statusText}</div>
+            <div class="tool-call-header">${escape(m.toolName)}${statusText}</div>
             ${descriptionHtml}
             ${inputText ? `<pre class="tool-input">${escape(inputText)}</pre>` : ''}
             ${outputHtml}
@@ -1613,7 +1793,7 @@ function renderMessages(messages) {
     if (msg.relevantFiles?.length) {
       const files = msg.relevantFiles.map(f => {
         const name = (f.uri?.path || f.path || f).split(/[/\\]/).pop();
-        return `<span class="tool-badge">📄 ${escape(name)}</span>`;
+        return `<span class="tool-badge">${escape(name)}</span>`;
       }).join('');
       cursorExtras += `<div class="tool-badges">${files}</div>`;
     }
@@ -1621,18 +1801,18 @@ function renderMessages(messages) {
       const codeFiles = msg.codeBlocks.map(b => {
         const fullPath = b.uri?.fsPath || b.uri?.path || '';
         const name = fullPath.split(/[/\\]/).pop() || 'file';
-        return `<span class="tool-badge">📝 ${escape(name)}</span>`;
+        return `<span class="tool-badge">${escape(name)}</span>`;
       }).join('');
       cursorExtras += `<div class="tool-badges">${codeFiles}</div>`;
     }
     if (msg.webReferences?.length) {
       const refs = msg.webReferences.map(r =>
-        `<span class="tool-badge">🌐 ${escape((r.title || r.url || '').slice(0, 40))}</span>`
+        `<span class="tool-badge">${escape((r.title || r.url || '').slice(0, 40))}</span>`
       ).join('');
       cursorExtras += `<div class="tool-badges">${refs}</div>`;
     }
     if (msg._agentSteps > 0) {
-      cursorExtras += `<div class="tool-badges"><span class="tool-badge tool-badge-muted">⚙ ${msg._agentSteps} 个 agent 步骤</span></div>`;
+      cursorExtras += `<div class="tool-badges"><span class="tool-badge tool-badge-muted">${msg._agentSteps} 个 agent 步骤</span></div>`;
     }
 
     return `
@@ -1778,7 +1958,7 @@ async function summarize() {
             if (isCurrentSummary()) {
               summaryEl.innerHTML = renderMarkdown(fullText) + renderSummaryAction();
               const btn = document.getElementById('summarizeBtn');
-              if (btn) btn.textContent = '🔄 重新分析';
+              if (btn) btn.textContent = '重新分析';
             }
           }
           if (data.error) {
@@ -1797,7 +1977,7 @@ async function summarize() {
 
   if (isCurrentSummary()) {
     btn.disabled = false;
-    btn.textContent = fullText ? '🔄 重新分析' : '✨ AI 分析';
+    btn.textContent = fullText ? '重新分析' : 'AI 分析';
   }
 }
 
@@ -1847,6 +2027,7 @@ function renderMarkdown(text) {
 
 function renderStatsSummary(data) {
   if (!data) return '统计加载失败';
+  const filterLabel = getTimeFilterSummaryLabel();
 
   if (data.source && data.source !== 'all') {
     const sourceLabel = ({
@@ -1855,10 +2036,10 @@ function renderStatsSummary(data) {
       cursor: 'Cursor',
     })[data.source] || data.source;
     const activeDays = data.activity?.activeDays || 0;
-    return `${sourceLabel} ${data.total} 条对话 · 活跃 ${activeDays} 天`;
+    return `${filterLabel} · ${sourceLabel} ${data.total} 条对话 · 活跃 ${activeDays} 天`;
   }
 
-  return `共 ${data.total} 条对话 · Claude ${data.bySource.claude||0} · Codex ${data.bySource.codex||0} · Cursor ${data.bySource.cursor||0}`;
+  return `${filterLabel} · 共 ${data.total} 条对话 · Claude ${data.bySource.claude||0} · Codex ${data.bySource.codex||0} · Cursor ${data.bySource.cursor||0}`;
 }
 
 function renderActivityDashboard(activity) {
@@ -1941,6 +2122,36 @@ function setView(view, el) {
   renderView();
 }
 
+function setTimePreset(preset, el) {
+  applyTimePresetToState(preset);
+  syncDashboardTimeFilterUi();
+  loadStats();
+}
+
+function setTimeBoundary(key, value) {
+  state.timeFilter[key] = value || '';
+  if (!state.timeFilter.startDate && !state.timeFilter.endDate) {
+    state.timeFilter.preset = 'all';
+  } else {
+    state.timeFilter.preset = 'custom';
+  }
+
+  if (
+    state.timeFilter.startDate &&
+    state.timeFilter.endDate &&
+    state.timeFilter.startDate > state.timeFilter.endDate
+  ) {
+    if (key === 'startDate') {
+      state.timeFilter.endDate = state.timeFilter.startDate;
+    } else {
+      state.timeFilter.startDate = state.timeFilter.endDate;
+    }
+  }
+
+  syncDashboardTimeFilterUi();
+  loadStats();
+}
+
 function renderView() {
   const dashboardPage = document.getElementById('dashboardPage');
   const conversationPage = document.getElementById('conversationPage');
@@ -1956,9 +2167,13 @@ function hasActivityData(data) {
   );
 }
 
-async function buildStatsFallback(source, refresh = false) {
-  const conversations = await fetchConversationsForStats(source, refresh);
-  return computeActivityFromConversations(conversations, source);
+async function buildStatsFallback(refresh = false) {
+  const conversations = await fetchConversationsForStats(state.source, refresh);
+  return computeActivityFromConversations(conversations, {
+    source: state.source,
+    start: state.timeFilter.startDate,
+    end: state.timeFilter.endDate,
+  });
 }
 
 async function fetchConversationsForStats(source, refresh = false) {
@@ -1986,10 +2201,23 @@ async function fetchConversationsForStats(source, refresh = false) {
   return allItems;
 }
 
-function computeActivityFromConversations(conversations, source = 'all') {
-  const filtered = source && source !== 'all'
-    ? conversations.filter(conversation => conversation.source === source)
-    : conversations;
+function computeActivityFromConversations(conversations, options = {}) {
+  const source = options.source || 'all';
+  const startDate = parseDateInputValue(options.start);
+  const endDate = parseDateInputValue(options.end, true);
+  const filtered = conversations.filter(conversation => {
+    if (source && source !== 'all' && conversation.source !== source) {
+      return false;
+    }
+
+    if (!startDate && !endDate) return true;
+
+    const date = parseConversationDate(conversation.lastTimestamp || conversation.timestamp);
+    if (!date) return false;
+    if (startDate && date < startDate) return false;
+    if (endDate && date > endDate) return false;
+    return true;
+  });
   const bySource = {};
   const hourly = Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 }));
   const heatmap = Array.from({ length: 7 }, () => Array(24).fill(0));
@@ -2028,6 +2256,10 @@ function computeActivityFromConversations(conversations, source = 'all') {
 
   return {
     source,
+    range: {
+      start: options.start || '',
+      end: options.end || '',
+    },
     total: filtered.length,
     bySource,
     activity: {
@@ -2048,6 +2280,96 @@ function parseConversationDate(value) {
   if (!value) return null;
   const date = new Date(typeof value === 'number' ? value * 1000 : value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseDateInputValue(value, endOfDay = false) {
+  if (!value) return null;
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const date = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    endOfDay ? 23 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 59 : 0,
+    endOfDay ? 999 : 0
+  );
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function applyTimePresetToState(preset) {
+  const config = DASHBOARD_PRESET_CONFIG[preset] || DASHBOARD_PRESET_CONFIG['1y'];
+  state.timeFilter.preset = preset in DASHBOARD_PRESET_CONFIG ? preset : '1y';
+
+  if (config.days == null) {
+    state.timeFilter.startDate = '';
+    state.timeFilter.endDate = '';
+    return;
+  }
+
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - (config.days - 1));
+
+  state.timeFilter.startDate = formatDateInput(startDate);
+  state.timeFilter.endDate = formatDateInput(endDate);
+}
+
+function syncDashboardTimeFilterUi() {
+  document.querySelectorAll('.range-pill').forEach(button => {
+    button.classList.toggle('active', button.dataset.range === state.timeFilter.preset);
+  });
+
+  const startInput = document.getElementById('dashboardStartDate');
+  const endInput = document.getElementById('dashboardEndDate');
+  if (startInput) startInput.value = state.timeFilter.startDate || '';
+  if (endInput) endInput.value = state.timeFilter.endDate || '';
+}
+
+function getDashboardRangeParams() {
+  return {
+    start: state.timeFilter.startDate || '',
+    end: state.timeFilter.endDate || '',
+  };
+}
+
+function getStatsRequestSignature() {
+  return JSON.stringify({
+    source: state.source,
+    start: state.timeFilter.startDate || '',
+    end: state.timeFilter.endDate || '',
+  });
+}
+
+function getTimeFilterSummaryLabel() {
+  if (state.timeFilter.preset !== 'custom') {
+    return DASHBOARD_PRESET_CONFIG[state.timeFilter.preset]?.label || DASHBOARD_PRESET_CONFIG['1y'].label;
+  }
+
+  if (state.timeFilter.startDate && state.timeFilter.endDate) {
+    return `${state.timeFilter.startDate} 至 ${state.timeFilter.endDate}`;
+  }
+
+  if (state.timeFilter.startDate) {
+    return `${state.timeFilter.startDate} 起`;
+  }
+
+  if (state.timeFilter.endDate) {
+    return `截至 ${state.timeFilter.endDate}`;
+  }
+
+  return DASHBOARD_PRESET_CONFIG.all.label;
+}
+
+function formatDateInput(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
 }
 
 function renderHourlyChart(hourly, maxCount) {
