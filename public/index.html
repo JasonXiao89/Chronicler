@@ -821,6 +821,21 @@
       radial-gradient(circle at top left, rgba(160, 123, 95, 0.06), transparent 24%),
       linear-gradient(180deg, rgba(255, 252, 248, 0.46), transparent 28%);
   }
+  .messages.mechanism-mode {
+    position: relative;
+    padding-left: 74px;
+  }
+  .messages.mechanism-mode::before {
+    content: "";
+    position: absolute;
+    top: 22px;
+    bottom: 22px;
+    left: 44px;
+    width: 2px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(160, 123, 95, 0.1), rgba(160, 123, 95, 0.32), rgba(160, 123, 95, 0.1));
+    pointer-events: none;
+  }
 
   .message {
     border-radius: 18px;
@@ -830,6 +845,42 @@
     box-shadow: var(--shadow-soft);
     backdrop-filter: blur(10px);
     position: relative;
+  }
+  .message.has-mechanism::before {
+    content: "";
+    position: absolute;
+    left: -38px;
+    top: 22px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: var(--accent);
+    border: 2px solid rgba(255, 251, 246, 0.9);
+    box-shadow: 0 0 0 4px rgba(160, 123, 95, 0.12);
+  }
+  .message.focused-mechanism {
+    border-color: rgba(160, 123, 95, 0.32);
+    box-shadow: 0 0 0 3px rgba(160, 123, 95, 0.12), var(--shadow-soft);
+  }
+  .message-sequence {
+    position: absolute;
+    left: -72px;
+    top: 10px;
+    width: 56px;
+    padding: 6px 8px;
+    border-radius: 12px;
+    background: rgba(255, 251, 246, 0.82);
+    border: 1px solid rgba(108, 89, 72, 0.12);
+    color: var(--text-soft);
+    font-size: 10px;
+    line-height: 1.45;
+    text-align: center;
+    box-shadow: var(--shadow-soft);
+  }
+  .message-sequence strong {
+    display: block;
+    color: var(--text);
+    font-size: 11px;
   }
   .message::after {
     content: "";
@@ -865,6 +916,38 @@
     color: var(--text);
     white-space: pre-wrap;
     word-break: break-word;
+  }
+  .block-mechanism {
+    margin-bottom: 8px;
+  }
+  .block-mechanism-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .block-mechanism-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255, 251, 246, 0.7);
+    border: 1px solid rgba(108, 89, 72, 0.1);
+    color: var(--text);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .block-mechanism-tag.kind-thinking {
+    background: rgba(198, 170, 139, 0.16);
+  }
+  .block-mechanism-tag.kind-tool {
+    background: rgba(131, 153, 143, 0.14);
+  }
+  .block-mechanism-tag.kind-commentary {
+    background: rgba(140, 161, 184, 0.14);
+  }
+  .block-mechanism-tag.kind-final {
+    background: rgba(160, 123, 95, 0.18);
   }
 
   .thinking-block {
@@ -1162,6 +1245,21 @@
     background: rgba(255, 251, 246, 0.72);
     box-shadow: var(--shadow-soft);
   }
+  .mechanism-card.interactive,
+  .mechanism-metric.interactive,
+  .mechanism-tag.interactive,
+  .mechanism-list-item.interactive {
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+  }
+  .mechanism-card.interactive:hover,
+  .mechanism-metric.interactive:hover,
+  .mechanism-tag.interactive:hover,
+  .mechanism-list-item.interactive:hover {
+    transform: translateY(-1px);
+    border-color: rgba(160, 123, 95, 0.2);
+    background: rgba(255, 251, 246, 0.84);
+  }
   .mechanism-card h3 {
     margin: 0 0 10px;
     font-size: 13px;
@@ -1442,8 +1540,28 @@
       radial-gradient(circle at top left, rgba(199, 155, 118, 0.08), transparent 24%),
       linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 28%);
   }
+  body[data-theme="dark"] .messages.mechanism-mode::before {
+    background: linear-gradient(180deg, rgba(199, 155, 118, 0.12), rgba(199, 155, 118, 0.36), rgba(199, 155, 118, 0.12));
+  }
   body[data-theme="dark"] .message::after {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  body[data-theme="dark"] .message.has-mechanism::before {
+    background: #d8aa83;
+    border-color: rgba(29, 24, 21, 0.96);
+    box-shadow: 0 0 0 4px rgba(199, 155, 118, 0.16);
+  }
+  body[data-theme="dark"] .message-sequence {
+    background: rgba(255, 248, 240, 0.08);
+    border-color: rgba(223, 206, 187, 0.12);
+    color: #d5c5b8;
+  }
+  body[data-theme="dark"] .message-sequence strong {
+    color: #f2e8dc;
+  }
+  body[data-theme="dark"] .message.focused-mechanism {
+    border-color: rgba(224, 181, 143, 0.3);
+    box-shadow: 0 0 0 3px rgba(199, 155, 118, 0.16), var(--shadow-soft);
   }
   body[data-theme="dark"] .thinking-header {
     color: #cebeb0;
@@ -1484,6 +1602,23 @@
   }
   body[data-theme="dark"] .summary-panel {
     background: linear-gradient(180deg, rgba(29, 24, 21, 0.96), rgba(20, 17, 15, 0.98));
+  }
+  body[data-theme="dark"] .block-mechanism-tag {
+    background: rgba(255, 248, 240, 0.08);
+    border-color: rgba(223, 206, 187, 0.12);
+    color: #f1e5d9;
+  }
+  body[data-theme="dark"] .block-mechanism-tag.kind-thinking {
+    background: rgba(198, 170, 139, 0.18);
+  }
+  body[data-theme="dark"] .block-mechanism-tag.kind-tool {
+    background: rgba(103, 138, 124, 0.18);
+  }
+  body[data-theme="dark"] .block-mechanism-tag.kind-commentary {
+    background: rgba(108, 135, 163, 0.18);
+  }
+  body[data-theme="dark"] .block-mechanism-tag.kind-final {
+    background: rgba(191, 143, 103, 0.22);
   }
   body[data-theme="dark"] .summary-tabs {
     background: rgba(255, 248, 240, 0.08);
@@ -1857,6 +1992,110 @@ function getMechanismContentEl() {
   return nodes.length ? nodes[nodes.length - 1] : null;
 }
 
+function getActiveMechanismData() {
+  return state.activeId ? state.mechanismCache[state.activeId] || null : null;
+}
+
+function getBubbleMechanism(meta, msg) {
+  if (state.analysisTab !== 'mechanism') return null;
+  const analysis = getActiveMechanismData();
+  const sequence = analysis?.segments?.sequence;
+  if (!Array.isArray(sequence) || !sequence.length) return null;
+
+  const messageIndexes = [msg?._messageIndex, ...(meta || []).map(item => item?._messageIndex)]
+    .filter(index => Number.isInteger(index));
+  if (!messageIndexes.length) return null;
+
+  const related = sequence.filter(segment => messageIndexes.includes(segment.messageIndex));
+  if (!related.length) return null;
+
+  const summary = related.reduce((acc, segment) => {
+    acc[segment.kind] = (acc[segment.kind] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    related,
+    summary,
+  };
+}
+
+function renderBubbleMechanism(meta, msg) {
+  const bubbleMechanism = getBubbleMechanism(meta, msg);
+  if (!bubbleMechanism) return '';
+
+  const tags = bubbleMechanism.related.map(segment => {
+    const embedded = segment.embedded ? '嵌入' : '显式';
+    return `<span class="message-mechanism-tag">#${segment.index + 1} ${escape(segment.kind)} · ${escape(embedded)}</span>`;
+  }).join('');
+
+  const summaryText = ['thinking', 'tool', 'commentary', 'final']
+    .filter(kind => bubbleMechanism.summary[kind])
+    .map(kind => `${kind} ${bubbleMechanism.summary[kind]}`)
+    .join(' · ');
+
+  return `
+    <div class="message-mechanism">
+      <div class="message-mechanism-header">机制映射</div>
+      <div class="message-mechanism-tags">${tags}</div>
+      <div class="message-mechanism-note">这条气泡对应的机制片段：${escape(summaryText)}</div>
+    </div>`;
+}
+
+function getMechanismSegmentsForMessageIndex(messageIndex, kind = null) {
+  if (!Number.isInteger(messageIndex) || state.analysisTab !== 'mechanism') return [];
+  const analysis = getActiveMechanismData();
+  const sequence = analysis?.segments?.sequence;
+  if (!Array.isArray(sequence)) return [];
+  return sequence.filter(segment =>
+    segment.messageIndex === messageIndex && (!kind || segment.kind === kind)
+  );
+}
+
+function renderMechanismTags(segments) {
+  if (!Array.isArray(segments) || !segments.length) return '';
+  const tags = segments.map(segment => {
+    const embedded = segment.embedded ? '嵌入' : '显式';
+    return `<span class="block-mechanism-tag kind-${escapeAttr(segment.kind)}">#${segment.index + 1} ${escape(segment.kind)} · ${embedded}</span>`;
+  }).join('');
+  return `<div class="block-mechanism"><div class="block-mechanism-tags">${tags}</div></div>`;
+}
+
+function clearFocusedMechanism() {
+  document.querySelectorAll('.message.focused-mechanism').forEach(node => {
+    node.classList.remove('focused-mechanism');
+  });
+}
+
+function scrollToMechanismMessage(messageIndex) {
+  const target = document.querySelector(`.message[data-message-index="${messageIndex}"]`);
+  if (!target) return;
+  clearFocusedMechanism();
+  target.classList.add('focused-mechanism');
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function focusMechanismKind(kind) {
+  const analysis = getActiveMechanismData();
+  const segment = analysis?.segments?.[kind]?.[0];
+  if (!segment || !Number.isInteger(segment.messageIndex)) return;
+  scrollToMechanismMessage(segment.messageIndex);
+}
+
+function focusMechanismTransition(from, to) {
+  const analysis = getActiveMechanismData();
+  const sequence = analysis?.segments?.sequence || [];
+  for (let index = 0; index < sequence.length - 1; index += 1) {
+    if (sequence[index]?.kind === from && sequence[index + 1]?.kind === to) {
+      const messageIndex = sequence[index + 1]?.messageIndex ?? sequence[index]?.messageIndex;
+      if (Number.isInteger(messageIndex)) {
+        scrollToMechanismMessage(messageIndex);
+        return;
+      }
+    }
+  }
+}
+
 function syncAnalysisTabUi() {
   document.querySelectorAll('.summary-tab').forEach(button => {
     button.classList.toggle('active', button.dataset.tab === state.analysisTab);
@@ -1871,6 +2110,9 @@ function syncAnalysisTabUi() {
 function setAnalysisTab(tab, el) {
   state.analysisTab = tab === 'mechanism' ? 'mechanism' : 'summary';
   syncAnalysisTabUi();
+  if (state.activeMessages?.length) {
+    renderMessages(state.activeMessages);
+  }
   if (state.analysisTab === 'mechanism' && state.activeId) {
     loadMechanismAnalysis();
   }
@@ -2029,8 +2271,11 @@ async function openConversation(id) {
     if (data.tokenUsage) conv.tokenUsage = data.tokenUsage;
     const tokenRow = document.getElementById('tokenRow');
     if (tokenRow) tokenRow.innerHTML = renderTokenUsage(conv?.tokenUsage, { showUnavailable: true });
-    state.activeMessages = data.messages;
-    renderMessages(data.messages);
+    state.activeMessages = (data.messages || []).map((message, index) => ({
+      ...message,
+      _messageIndex: index,
+    }));
+    renderMessages(state.activeMessages);
     if (state.analysisTab === 'mechanism') {
       loadMechanismAnalysis();
     }
@@ -2047,6 +2292,7 @@ function renderMessages(messages) {
     return;
   }
 
+  container.classList.toggle('mechanism-mode', state.analysisTab === 'mechanism' && Boolean(getActiveMechanismData()));
   const filtered = messages.filter(m => ['user','assistant','thinking','tool'].includes(m.role));
 
   // Group consecutive thinking/tool messages before an assistant message
@@ -2069,6 +2315,12 @@ function renderMessages(messages) {
 
     const isUser = msg.role === 'user';
     const time = msg.timestamp ? `<div class="message-time">${formatTime(msg.timestamp)}</div>` : '';
+    const commentarySegments = getMechanismSegmentsForMessageIndex(msg._messageIndex, 'commentary');
+    const finalSegments = getMechanismSegmentsForMessageIndex(msg._messageIndex, 'final');
+    const bubbleMechanism = getBubbleMechanism(meta, msg);
+    const sequenceLabel = bubbleMechanism?.related?.length
+      ? `#${bubbleMechanism.related[0].index + 1}${bubbleMechanism.related.length > 1 ? `-#${bubbleMechanism.related[bubbleMechanism.related.length - 1].index + 1}` : ''}`
+      : '';
 
     // Thinking block (from Claude Code .thinking field OR Codex thinking role)
     let thinkingHtml = '';
@@ -2077,8 +2329,13 @@ function renderMessages(messages) {
     meta.filter(m => m.role === 'thinking').forEach(m => thinkingItems.push(m.text));
 
     if (thinkingItems.length) {
+      const thinkingSegments = [
+        ...getMechanismSegmentsForMessageIndex(msg._messageIndex, 'thinking'),
+        ...meta.flatMap(item => getMechanismSegmentsForMessageIndex(item._messageIndex, 'thinking')),
+      ];
       const content = thinkingItems.map(t => escape(t)).join('\n\n---\n\n');
       thinkingHtml = `
+        ${renderMechanismTags(thinkingSegments)}
         <div class="thinking-block" onclick="toggleThinking(this)">
           <div class="thinking-header">思考过程 (点击展开)</div>
           <div class="thinking-content">${content}</div>
@@ -2091,7 +2348,8 @@ function renderMessages(messages) {
     if (msg.toolUses?.length) {
       const pairs = msg.toolUses.filter(t => t.name !== '__result__');
 
-      toolsHtml = pairs.map(t => {
+      const embeddedToolSegments = getMechanismSegmentsForMessageIndex(msg._messageIndex, 'tool');
+      toolsHtml = pairs.map((t, pairIndex) => {
         const inputText = formatToolInput(t.name, t.input);
         const outputHtml = t.output
           ? `<div class="tool-output" onclick="toggleToolOutput(this)">
@@ -2099,7 +2357,7 @@ function renderMessages(messages) {
                <pre class="tool-output-content">${escape(t.output)}</pre>
              </div>`
           : '';
-        return `<div class="tool-call">
+        return `${renderMechanismTags(embeddedToolSegments[pairIndex] ? [embeddedToolSegments[pairIndex]] : [])}<div class="tool-call">
           <div class="tool-call-header">${escape(t.name)}</div>
           ${inputText ? `<pre class="tool-input">${escape(inputText)}</pre>` : ''}
           ${outputHtml}
@@ -2110,6 +2368,7 @@ function renderMessages(messages) {
     // Codex tool entries (already formatted as text)
     if (meta.some(m => m.role === 'tool')) {
       const codexTools = meta.filter(m => m.role === 'tool').map(m => {
+        const toolSegments = getMechanismSegmentsForMessageIndex(m._messageIndex, 'tool');
         if (m.toolName) {
           const inputText = formatToolInput(m.toolName, m.toolInput);
           const outputText = formatToolOutput(m.toolOutput);
@@ -2123,14 +2382,14 @@ function renderMessages(messages) {
                  <pre class="tool-output-content">${escape(outputText)}</pre>
                </div>`
             : '';
-          return `<div class="tool-call">
+          return `${renderMechanismTags(toolSegments)}<div class="tool-call">
             <div class="tool-call-header">${escape(m.toolName)}${statusText}</div>
             ${descriptionHtml}
             ${inputText ? `<pre class="tool-input">${escape(inputText)}</pre>` : ''}
             ${outputHtml}
           </div>`;
         }
-        return `<div class="tool-call"><div class="tool-call-header">${escape(m.text)}</div></div>`;
+        return `${renderMechanismTags(toolSegments)}<div class="tool-call"><div class="tool-call-header">${escape(m.text)}</div></div>`;
       }).join('');
       toolsHtml = (toolsHtml || '') + codexTools;
     }
@@ -2165,11 +2424,13 @@ function renderMessages(messages) {
     }
 
     return `
-      <div class="message ${isUser ? 'user' : 'assistant'}">
+      <div class="message ${isUser ? 'user' : 'assistant'} ${bubbleMechanism ? 'has-mechanism' : ''}" data-message-index="${msg._messageIndex}">
         <div class="message-role">${isUser ? '用户' : 'AI 助手'}</div>
-        ${toolsHtml}
+        ${bubbleMechanism ? `<div class="message-sequence"><strong>${sequenceLabel}</strong>${escape(Object.keys(bubbleMechanism.summary).join(' · '))}</div>` : ''}
         ${thinkingHtml}
+        ${toolsHtml}
         ${cursorExtras}
+        ${!isUser ? renderMechanismTags(finalSegments.length ? finalSegments : commentarySegments) : ''}
         ${text ? `<div class="message-text">${text}</div>` : ''}
         ${time}
       </div>`;
@@ -2247,7 +2508,7 @@ function renderMechanismSegmentList(title, items, emptyText) {
   }
 
   const preview = items.slice(0, 3).map(item => `
-    <div class="mechanism-list-item">
+    <div class="mechanism-list-item interactive" ${Number.isInteger(item.messageIndex) ? `onclick="scrollToMechanismMessage(${item.messageIndex})"` : ''}>
       <strong>${escape(item.label || item.kind)}</strong>
       <span class="mechanism-list-preview">${escape(item.preview || '无可见预览')}</span>
     </div>`).join('');
@@ -2270,22 +2531,22 @@ function renderMechanismAnalysis(data) {
 
   return `
     <div class="mechanism-overview">
-      <div class="mechanism-metric">
+      <div class="mechanism-metric interactive" onclick="focusMechanismKind('thinking')">
         <div class="mechanism-metric-label">Thinking</div>
         <div class="mechanism-metric-value">${counts.thinking || 0}</div>
         <div class="mechanism-metric-note">${formatRatio(ratios.thinking)} 可见机制段</div>
       </div>
-      <div class="mechanism-metric">
+      <div class="mechanism-metric interactive" onclick="focusMechanismKind('tool')">
         <div class="mechanism-metric-label">Tools</div>
         <div class="mechanism-metric-value">${counts.tool || 0}</div>
         <div class="mechanism-metric-note">${counts.embeddedTools || 0} 个嵌入 assistant</div>
       </div>
-      <div class="mechanism-metric">
+      <div class="mechanism-metric interactive" onclick="focusMechanismKind('commentary')">
         <div class="mechanism-metric-label">Commentary</div>
         <div class="mechanism-metric-value">${counts.commentary || 0}</div>
         <div class="mechanism-metric-note">${formatRatio(ratios.commentary)} 中间解释段</div>
       </div>
-      <div class="mechanism-metric">
+      <div class="mechanism-metric interactive" onclick="focusMechanismKind('final')">
         <div class="mechanism-metric-label">Final</div>
         <div class="mechanism-metric-value">${counts.final || 0}</div>
         <div class="mechanism-metric-note">${escape(summary.visibleThinkingMode || '未识别')}</div>
@@ -2312,7 +2573,7 @@ function renderMechanismAnalysis(data) {
       <h3>高频切换</h3>
       <div class="mechanism-tags">
         ${(transitions.length ? transitions : [{ from: 'n/a', to: 'n/a', count: 0 }]).map(item => `
-          <span class="mechanism-tag">${escape(item.from)} → ${escape(item.to)} · ${item.count}</span>
+          <span class="mechanism-tag interactive" onclick="focusMechanismTransition('${escapeAttr(item.from)}', '${escapeAttr(item.to)}')">${escape(item.from)} → ${escape(item.to)} · ${item.count}</span>
         `).join('')}
       </div>
     </div>
@@ -2465,6 +2726,7 @@ async function loadMechanismAnalysis(force = false) {
 
   if (!force && state.mechanismCache[mechanismId]) {
     mechanismEl.innerHTML = renderMechanismAnalysis(state.mechanismCache[mechanismId]) + renderMechanismAction();
+    if (state.activeMessages?.length) renderMessages(state.activeMessages);
     return;
   }
 
@@ -2483,6 +2745,7 @@ async function loadMechanismAnalysis(force = false) {
     if (!isCurrentMechanism()) return;
     state.mechanismCache[mechanismId] = data;
     mechanismEl.innerHTML = renderMechanismAnalysis(data) + renderMechanismAction();
+    if (state.activeMessages?.length) renderMessages(state.activeMessages);
   } catch (e) {
     if (!isCurrentMechanism()) return;
     mechanismEl.innerHTML = `<div class="status-error">机制分析加载失败: ${escape(e.message)}</div>`;
