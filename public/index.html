@@ -1008,22 +1008,65 @@
   .summary-header {
     padding: 18px 18px 14px;
     border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .summary-header-title {
     font-size: 14px;
     font-weight: 650;
     color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 8px;
     letter-spacing: 0.04em;
     font-family: Georgia, "Times New Roman", serif;
   }
-  .summary-content {
+  .summary-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(255, 251, 246, 0.74);
+    border: 1px solid rgba(108, 89, 72, 0.1);
+  }
+  .summary-tab {
     flex: 1;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.18s ease, color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  }
+  .summary-tab.active {
+    background: var(--accent);
+    color: #fffaf4;
+  }
+  .summary-tab:hover:not(.active) {
+    background: rgba(160, 123, 95, 0.08);
+    color: var(--text);
+    border-color: rgba(108, 89, 72, 0.12);
+    transform: translateY(-1px);
+  }
+  .summary-panels {
+    flex: 1;
+    min-height: 0;
+  }
+  .summary-content {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
     overflow-y: auto;
     padding: 18px 18px 28px;
     font-size: 13px;
     line-height: 1.8;
     color: var(--text);
+  }
+  .summary-content.active {
+    display: block;
   }
   .summary-placeholder {
     display: flex;
@@ -1077,6 +1120,146 @@
     padding: 2px 6px;
     font-size: 12px;
     font-family: monospace;
+  }
+  .mechanism-overview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .mechanism-metric {
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: rgba(255, 251, 246, 0.72);
+    box-shadow: var(--shadow-soft);
+  }
+  .mechanism-metric-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .mechanism-metric-value {
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 650;
+    color: var(--text);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .mechanism-metric-note {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-soft);
+    line-height: 1.5;
+  }
+  .mechanism-card {
+    margin-top: 12px;
+    padding: 14px 14px 12px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+    background: rgba(255, 251, 246, 0.72);
+    box-shadow: var(--shadow-soft);
+  }
+  .mechanism-card h3 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .mechanism-copy {
+    color: var(--text-soft);
+    line-height: 1.7;
+  }
+  .mechanism-copy strong {
+    color: var(--text);
+  }
+  .mechanism-tags,
+  .mechanism-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .mechanism-tag,
+  .mechanism-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(160, 123, 95, 0.1);
+    border: 1px solid rgba(108, 89, 72, 0.1);
+    color: var(--text);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .mechanism-list {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mechanism-list-item {
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(160, 123, 95, 0.06);
+    border: 1px solid rgba(108, 89, 72, 0.1);
+    color: var(--text-soft);
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .mechanism-list-item strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .mechanism-list-preview {
+    display: block;
+    font-size: 12px;
+    line-height: 1.75;
+  }
+  .mechanism-note.warning {
+    background: rgba(200, 131, 95, 0.12);
+  }
+  .mechanism-note.info {
+    background: rgba(131, 153, 143, 0.12);
+  }
+  .mechanism-columns {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .mechanism-subcard {
+    padding: 12px;
+    border-radius: 14px;
+    background: rgba(160, 123, 95, 0.06);
+    border: 1px solid rgba(108, 89, 72, 0.1);
+    min-width: 0;
+  }
+  .mechanism-example-card .mechanism-list {
+    gap: 10px;
+  }
+  .mechanism-subcard-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+  }
+  .mechanism-subcard-value {
+    font-size: 18px;
+    font-weight: 650;
+    color: var(--text);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .mechanism-subcard-copy {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--text-soft);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   /* Empty state */
@@ -1302,6 +1485,54 @@
   body[data-theme="dark"] .summary-panel {
     background: linear-gradient(180deg, rgba(29, 24, 21, 0.96), rgba(20, 17, 15, 0.98));
   }
+  body[data-theme="dark"] .summary-tabs {
+    background: rgba(255, 248, 240, 0.08);
+    border-color: rgba(223, 206, 187, 0.14);
+  }
+  body[data-theme="dark"] .summary-tab {
+    color: #ccb8a8;
+  }
+  body[data-theme="dark"] .summary-tab:hover:not(.active) {
+    background: rgba(255, 248, 240, 0.12);
+    color: #f3e8dc;
+    border-color: rgba(223, 206, 187, 0.16);
+  }
+  body[data-theme="dark"] .mechanism-metric,
+  body[data-theme="dark"] .mechanism-card {
+    background: linear-gradient(180deg, rgba(49, 42, 37, 0.96), rgba(38, 33, 29, 0.98));
+    border-color: rgba(223, 206, 187, 0.14);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.24);
+  }
+  body[data-theme="dark"] .mechanism-metric-label,
+  body[data-theme="dark"] .mechanism-subcard-title {
+    color: #bda897;
+  }
+  body[data-theme="dark"] .mechanism-metric-value,
+  body[data-theme="dark"] .mechanism-card h3,
+  body[data-theme="dark"] .mechanism-copy strong,
+  body[data-theme="dark"] .mechanism-list-item strong,
+  body[data-theme="dark"] .mechanism-subcard-value {
+    color: #f3e8dc;
+  }
+  body[data-theme="dark"] .mechanism-metric-note,
+  body[data-theme="dark"] .mechanism-copy,
+  body[data-theme="dark"] .mechanism-list-item,
+  body[data-theme="dark"] .mechanism-subcard-copy {
+    color: #dfd0c3;
+  }
+  body[data-theme="dark"] .mechanism-tag,
+  body[data-theme="dark"] .mechanism-chip,
+  body[data-theme="dark"] .mechanism-list-item,
+  body[data-theme="dark"] .mechanism-subcard {
+    background: rgba(255, 248, 240, 0.06);
+    border-color: rgba(223, 206, 187, 0.14);
+  }
+  body[data-theme="dark"] .mechanism-note.warning {
+    background: rgba(191, 123, 87, 0.18);
+  }
+  body[data-theme="dark"] .mechanism-note.info {
+    background: rgba(103, 138, 124, 0.18);
+  }
   body[data-theme="dark"] .summary-content code {
     background: rgba(199, 155, 118, 0.14);
   }
@@ -1327,6 +1558,8 @@
     .dashboard-toolbar { flex-direction: column; align-items: stretch; }
     .analytics-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .dashboard { grid-template-columns: 1fr; }
+    .mechanism-overview,
+    .mechanism-columns { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 920px) {
@@ -1434,6 +1667,14 @@
             <button class="metric-pill" data-metric="tokens" onclick="setDashboardMetric('tokens', this)">Tokens</button>
             <button class="metric-pill" data-metric="conversations" onclick="setDashboardMetric('conversations', this)">Conversations</button>
           </div>
+          <div class="summary-content" id="mechanismContent">
+            <div class="summary-placeholder">
+              <span>机制</span>
+              <div>打开对话后切换到这里</div>
+              <div>查看 thinking / tool / commentary / final 结构</div>
+              <div class="summary-placeholder-note">自动提取流程模式、来源特征和边界说明</div>
+            </div>
+          </div>
         </div>
         <div class="dashboard-filter-group">
           <div class="dashboard-filter-label">快速范围</div>
@@ -1513,13 +1754,27 @@
           </div>
         </div>
         <div class="summary-panel">
-          <div class="summary-header">AI 分析摘要</div>
-          <div class="summary-content" id="summaryContent">
+          <div class="summary-header">
+            <div class="summary-header-title">AI 分析摘要</div>
+          </div>
+          <div class="summary-tabs">
+            <button class="summary-tab active" data-tab="summary" onclick="setAnalysisTab('summary', this)">摘要</button>
+            <button class="summary-tab" data-tab="mechanism" onclick="setAnalysisTab('mechanism', this)">Agent 机制分析</button>
+          </div>
+          <div class="summary-content active" id="summaryContent">
             <div class="summary-placeholder">
               <span>摘要</span>
               <div>打开对话后点击</div>
               <div><strong>「AI 分析」</strong>按钮</div>
               <div class="summary-placeholder-note">提取问题、意图、思路和解决方案</div>
+            </div>
+          </div>
+          <div class="summary-content" id="mechanismContent">
+            <div class="summary-placeholder">
+              <span>机制</span>
+              <div>打开对话后切换到这里</div>
+              <div>查看 thinking / tool / commentary / final 结构</div>
+              <div class="summary-placeholder-note">自动提取流程模式、来源特征和边界说明</div>
             </div>
           </div>
         </div>
@@ -1547,7 +1802,10 @@ let state = {
   activeId: null,
   activeMessages: [],
   searchTimer: null,
+  analysisTab: 'summary',
   summaryRunId: 0,
+  mechanismRunId: 0,
+  mechanismCache: {},
 };
 
 const LIMIT = 50;
@@ -1594,11 +1852,36 @@ function toggleTheme() {
   applyTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark', true);
 }
 
+function getMechanismContentEl() {
+  const nodes = document.querySelectorAll('#mechanismContent');
+  return nodes.length ? nodes[nodes.length - 1] : null;
+}
+
+function syncAnalysisTabUi() {
+  document.querySelectorAll('.summary-tab').forEach(button => {
+    button.classList.toggle('active', button.dataset.tab === state.analysisTab);
+  });
+
+  const summaryContent = document.getElementById('summaryContent');
+  const mechanismContent = getMechanismContentEl();
+  if (summaryContent) summaryContent.classList.toggle('active', state.analysisTab === 'summary');
+  if (mechanismContent) mechanismContent.classList.toggle('active', state.analysisTab === 'mechanism');
+}
+
+function setAnalysisTab(tab, el) {
+  state.analysisTab = tab === 'mechanism' ? 'mechanism' : 'summary';
+  syncAnalysisTabUi();
+  if (state.analysisTab === 'mechanism' && state.activeId) {
+    loadMechanismAnalysis();
+  }
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 async function init() {
   applyTheme(getPreferredTheme());
   applyTimePresetToState(state.timeFilter.preset);
   syncDashboardTimeFilterUi();
+  syncAnalysisTabUi();
   renderView();
   await loadStats();
   await loadConversations(true);
@@ -1687,8 +1970,10 @@ function renderList() {
 // ── Conversation ───────────────────────────────────────────────────────────
 async function openConversation(id) {
   state.summaryRunId += 1;
+  state.mechanismRunId += 1;
   state.activeId = id;
   renderList();
+  syncAnalysisTabUi();
 
   const conv = state.conversations.find(c => c.id === id);
   const view = document.getElementById('convView');
@@ -1729,6 +2014,14 @@ async function openConversation(id) {
     })
     .catch(() => {});
 
+  const mechanismEl = getMechanismContentEl();
+  if (mechanismEl) {
+    const cached = state.mechanismCache[id];
+    mechanismEl.innerHTML = cached
+      ? renderMechanismAnalysis(cached) + renderMechanismAction()
+      : renderMechanismPlaceholder('切换到这个标签后将自动分析本次会话的执行机制');
+  }
+
   try {
     const r = await fetch(`/api/conversations/${encodeURIComponent(id)}`);
     const data = await r.json();
@@ -1738,6 +2031,9 @@ async function openConversation(id) {
     if (tokenRow) tokenRow.innerHTML = renderTokenUsage(conv?.tokenUsage, { showUnavailable: true });
     state.activeMessages = data.messages;
     renderMessages(data.messages);
+    if (state.analysisTab === 'mechanism') {
+      loadMechanismAnalysis();
+    }
   } catch (e) {
     if (state.activeId !== id) return;
     document.getElementById('messages').innerHTML = `<div class="status-error">加载失败: ${e.message}</div>`;
@@ -1924,6 +2220,131 @@ function renderSummaryAction() {
   return '<div class="summary-actions"><button class="btn btn-ghost btn-small" onclick="summarize()">重新分析</button></div>';
 }
 
+function renderMechanismAction() {
+  return '<div class="summary-actions"><button class="btn btn-ghost btn-small" onclick="loadMechanismAnalysis(true)">重新分析机制</button></div>';
+}
+
+function renderMechanismPlaceholder(copy) {
+  return `
+    <div class="summary-placeholder">
+      <span>机制</span>
+      <div>${escape(copy || '切换到这里查看 Agent 机制分析')}</div>
+      <div class="summary-placeholder-note">会显示 thinking / tool / commentary / final 的结构差异</div>
+    </div>`;
+}
+
+function formatRatio(value) {
+  return `${Math.round(Number(value || 0) * 100)}%`;
+}
+
+function renderMechanismSegmentList(title, items, emptyText) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return `
+      <div class="mechanism-subcard mechanism-example-card">
+        <div class="mechanism-subcard-title">${escape(title)}</div>
+        <div class="mechanism-subcard-copy">${escape(emptyText)}</div>
+      </div>`;
+  }
+
+  const preview = items.slice(0, 3).map(item => `
+    <div class="mechanism-list-item">
+      <strong>${escape(item.label || item.kind)}</strong>
+      <span class="mechanism-list-preview">${escape(item.preview || '无可见预览')}</span>
+    </div>`).join('');
+
+  return `
+    <div class="mechanism-subcard mechanism-example-card">
+      <div class="mechanism-subcard-title">${escape(title)}</div>
+      <div class="mechanism-list">${preview}</div>
+    </div>`;
+}
+
+function renderMechanismAnalysis(data) {
+  const counts = data.metrics?.counts || {};
+  const ratios = data.metrics?.ratios || {};
+  const summary = data.summary || {};
+  const transitions = Array.isArray(data.transitions) ? data.transitions.slice(0, 4) : [];
+  const patterns = Array.isArray(data.patterns) ? data.patterns : [];
+  const notes = Array.isArray(data.sourceNotes) ? data.sourceNotes : [];
+  const segments = data.segments || {};
+
+  return `
+    <div class="mechanism-overview">
+      <div class="mechanism-metric">
+        <div class="mechanism-metric-label">Thinking</div>
+        <div class="mechanism-metric-value">${counts.thinking || 0}</div>
+        <div class="mechanism-metric-note">${formatRatio(ratios.thinking)} 可见机制段</div>
+      </div>
+      <div class="mechanism-metric">
+        <div class="mechanism-metric-label">Tools</div>
+        <div class="mechanism-metric-value">${counts.tool || 0}</div>
+        <div class="mechanism-metric-note">${counts.embeddedTools || 0} 个嵌入 assistant</div>
+      </div>
+      <div class="mechanism-metric">
+        <div class="mechanism-metric-label">Commentary</div>
+        <div class="mechanism-metric-value">${counts.commentary || 0}</div>
+        <div class="mechanism-metric-note">${formatRatio(ratios.commentary)} 中间解释段</div>
+      </div>
+      <div class="mechanism-metric">
+        <div class="mechanism-metric-label">Final</div>
+        <div class="mechanism-metric-value">${counts.final || 0}</div>
+        <div class="mechanism-metric-note">${escape(summary.visibleThinkingMode || '未识别')}</div>
+      </div>
+    </div>
+
+    <div class="mechanism-card">
+      <h3>机制画像</h3>
+      <div class="mechanism-copy">
+        <strong>主模式：</strong>${escape(summary.dominantPattern || '未识别')}<br>
+        <strong>来源：</strong>${escape(data.source || '')}<br>
+        <strong>标签：</strong>${summary.labels?.length ? summary.labels.map(label => `<span class="mechanism-chip">${escape(label)}</span>`).join(' ') : '<span class="mechanism-chip">待判断</span>'}
+      </div>
+    </div>
+
+    <div class="mechanism-card">
+      <h3>典型流程与模式</h3>
+      <div class="mechanism-list">
+        ${(patterns.length ? patterns : ['暂未抽取到稳定模式']).map(item => `<div class="mechanism-list-item">${escape(item)}</div>`).join('')}
+      </div>
+    </div>
+
+    <div class="mechanism-card">
+      <h3>高频切换</h3>
+      <div class="mechanism-tags">
+        ${(transitions.length ? transitions : [{ from: 'n/a', to: 'n/a', count: 0 }]).map(item => `
+          <span class="mechanism-tag">${escape(item.from)} → ${escape(item.to)} · ${item.count}</span>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="mechanism-card">
+      <h3>结构细节</h3>
+      <div class="mechanism-columns">
+        <div class="mechanism-subcard">
+          <div class="mechanism-subcard-title">嵌入结构</div>
+          <div class="mechanism-subcard-value">${(counts.embeddedThinking || 0) + (counts.embeddedTools || 0)}</div>
+          <div class="mechanism-subcard-copy">thinking ${counts.embeddedThinking || 0} · tools ${counts.embeddedTools || 0}</div>
+        </div>
+        <div class="mechanism-subcard">
+          <div class="mechanism-subcard-title">总段数</div>
+          <div class="mechanism-subcard-value">${counts.totalSegments || 0}</div>
+          <div class="mechanism-subcard-copy">raw messages ${counts.rawMessages || 0}</div>
+        </div>
+        ${renderMechanismSegmentList('Thinking 示例', segments.thinking, '未识别到显式 thinking')}
+        ${renderMechanismSegmentList('Tool 示例', segments.tool, '未识别到可见工具步骤')}
+      </div>
+    </div>
+
+    <div class="mechanism-card">
+      <h3>来源说明与边界</h3>
+      <div class="mechanism-list">
+        ${(notes.length ? notes : [{ level: 'info', text: '当前没有额外来源说明。' }]).map(note => `
+          <div class="mechanism-list-item mechanism-note ${escapeAttr(note.level || 'info')}">${escape(note.text)}</div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
 function toggleThinking(el) {
   el.classList.toggle('expanded');
   const header = el.querySelector('.thinking-header');
@@ -2035,6 +2456,39 @@ async function summarize() {
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
+async function loadMechanismAnalysis(force = false) {
+  const mechanismId = state.activeId;
+  if (!mechanismId) return;
+
+  const mechanismEl = getMechanismContentEl();
+  if (!mechanismEl) return;
+
+  if (!force && state.mechanismCache[mechanismId]) {
+    mechanismEl.innerHTML = renderMechanismAnalysis(state.mechanismCache[mechanismId]) + renderMechanismAction();
+    return;
+  }
+
+  const mechanismRunId = ++state.mechanismRunId;
+  const isCurrentMechanism = () =>
+    state.activeId === mechanismId && state.mechanismRunId === mechanismRunId;
+
+  mechanismEl.innerHTML = '<div class="loading">正在提取 Agent 机制结构<span class="blink-cursor">▌</span></div>';
+
+  try {
+    const response = await fetch(`/api/conversations/${encodeURIComponent(mechanismId)}/mechanism`);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || `HTTP ${response.status}`);
+    }
+    if (!isCurrentMechanism()) return;
+    state.mechanismCache[mechanismId] = data;
+    mechanismEl.innerHTML = renderMechanismAnalysis(data) + renderMechanismAction();
+  } catch (e) {
+    if (!isCurrentMechanism()) return;
+    mechanismEl.innerHTML = `<div class="status-error">机制分析加载失败: ${escape(e.message)}</div>`;
+  }
+}
+
 function setSource(source, el) {
   state.source = source;
   document.querySelectorAll('.source-tab').forEach(t => t.classList.remove('active'));

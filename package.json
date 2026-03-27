@@ -1,6 +1,6 @@
 {
   "name": "chronicler",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Browse and summarize Claude Code, Codex, and Cursor conversations",
   "main": "server.js",
   "scripts": {

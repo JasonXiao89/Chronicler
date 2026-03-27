@@ -15,6 +15,7 @@ if (fs.existsSync(envPath)) {
 const claudeReader = require('./readers/claude');
 const codexReader = require('./readers/codex');
 const cursorReader = require('./readers/cursor');
+const { analyzeConversationMechanism } = require('./lib/agent-mechanism');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -87,6 +88,27 @@ function getAllConversations(forceRefresh = false) {
   cache = { conversations: all, lastLoaded: now };
   console.log(`Loaded: ${claude.length} Claude, ${codex.length} Codex, ${cursor.length} Cursor`);
   return all;
+}
+
+function loadConversationById(id) {
+  const parts = id.split('::');
+  const source = parts[0];
+  const conversation = getAllConversations().find(c => c.id === id) || null;
+
+  let messages = [];
+
+  if (source === 'claude') {
+    const [, project, sessionId] = parts;
+    messages = claudeReader.getConversation(project, sessionId);
+  } else if (source === 'codex') {
+    const [, sessionId] = parts;
+    messages = codexReader.getConversation(sessionId);
+  } else if (source === 'cursor') {
+    const [, sessionId] = parts;
+    messages = cursorReader.getConversation(sessionId);
+  }
+
+  return { source, conversation, messages };
 }
 
 function parseConversationDate(value) {
@@ -253,24 +275,35 @@ app.get('/api/conversations', (req, res) => {
 app.get('/api/conversations/:id', (req, res) => {
   try {
     const id = decodeURIComponent(req.params.id);
-    const parts = id.split('::');
-    const source = parts[0];
-    const conversation = getAllConversations().find(c => c.id === id) || null;
-
-    let messages = [];
-
-    if (source === 'claude') {
-      const [, project, sessionId] = parts;
-      messages = claudeReader.getConversation(project, sessionId);
-    } else if (source === 'codex') {
-      const [, sessionId] = parts;
-      messages = codexReader.getConversation(sessionId);
-    } else if (source === 'cursor') {
-      const [, sessionId] = parts;
-      messages = cursorReader.getConversation(sessionId);
-    }
+    const { conversation, messages } = loadConversationById(id);
 
     res.json({ id, messages, tokenUsage: conversation?.tokenUsage || null });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/conversations/:id/mechanism', (req, res) => {
+  try {
+    const id = decodeURIComponent(req.params.id);
+    const { source, conversation, messages } = loadConversationById(id);
+    const analysis = analyzeConversationMechanism({
+      conversationId: id,
+      source,
+      messages,
+    });
+
+    res.json({
+      id,
+      title: conversation?.title || '',
+      source,
+      summary: analysis.summary,
+      segments: analysis.segments,
+      metrics: analysis.metrics,
+      transitions: analysis.transitions,
+      patterns: analysis.patterns,
+      sourceNotes: analysis.sourceNotes,
+    });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
