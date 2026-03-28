@@ -2,7 +2,7 @@
 
 Chronicler is a local-first conversation viewer for AI coding tools. It reads your saved chats from Claude Code, OpenAI Codex CLI, and Cursor, then lets you browse them in one interface and generate reusable summaries.
 
-Current version: `v0.1.3` (usable multi-source MVP, still evolving).
+Current version: `v0.1.4` (usable multi-source MVP, still evolving).
 
 ## What It Does
 
@@ -144,7 +144,10 @@ Chronicler reads conversation data directly from local storage on your machine.
 Chronicler/
 ├── public/          # Frontend UI
 ├── readers/         # Source-specific conversation readers
+├── lib/             # Shared server logic (e.g. agent mechanism analysis)
 ├── summaries/       # Saved summary markdown files
+├── export-conversations.ps1
+├── export-conversations.bat
 ├── .env.example
 ├── .gitignore
 ├── package.json
